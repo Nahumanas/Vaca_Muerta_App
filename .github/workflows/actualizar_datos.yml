@@ -1,0 +1,47 @@
+# Actualización automática de los datos de la app.
+# Una vez por semana GitHub descarga los datos nuevos del Gobierno, los procesa
+# y, si cambiaron, guarda los Parquet nuevos en el repo. Streamlit Cloud ve el
+# cambio y la app online se actualiza sola.
+name: Actualizar datos
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"   # todos los lunes a las 12:00 UTC (9:00 en Argentina)
+  workflow_dispatch:         # botón "Run workflow" para correrlo a mano
+
+permissions:
+  contents: write            # para poder guardar (commit) los datos nuevos
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Bajar el código del repo
+        uses: actions/checkout@v5
+
+      - name: Instalar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Instalar librerías
+        run: pip install pandas pyarrow
+
+      - name: Descargar datos del Gobierno
+        run: python scripts/descargar.py
+
+      - name: Procesar (limpiar y generar Parquet)
+        run: python scripts/procesar.py
+
+      - name: Guardar los cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add datos/procesados
+          if git diff --cached --quiet; then
+            echo "No hay datos nuevos."
+          else
+            git commit -m "Datos actualizados hasta $(python -c "import json; print(json.load(open('datos/procesados/info.json'))['ultimo_mes'])")"
+            git push
+          fi

@@ -1,0 +1,4 @@
+# Los CSV del Gobierno pesan mucho: no se suben a GitHub
+datos/crudos/
+__pycache__/
+.ipynb_checkpoints/
