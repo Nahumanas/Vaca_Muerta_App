@@ -5,7 +5,9 @@ Parte 3 del proyecto *Balance Energético de Argentina*
 la producción de Vaca Muerta pozo por pozo y se actualiza sola cada mes, más (próximamente) un modelo de
 Machine Learning que estima la producción de un pozo según cómo se lo fracturó.
 
-**App online:** _(link de Streamlit Cloud, se agrega al publicarla)_
+**👉 App online: https://monitor-vaca-muerta.streamlit.app/**
+
+![Página de inicio de la app](graficos/app_inicio.png)
 
 ## Estado
 
