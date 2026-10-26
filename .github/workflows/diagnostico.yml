@@ -10,11 +10,14 @@ jobs:
         os: [ubuntu-latest, ubuntu-24.04]
     runs-on: ${{ matrix.os }}
     steps:
-      - run: cat /etc/os-release | head -2
-      - run: getent ahosts datos.energia.gob.ar || true; dig +short A datos.energia.gob.ar || true; dig +short AAAA datos.energia.gob.ar || true
-      - run: curl -4 -sS -o /dev/null -w "http v4: %{http_code} %{time_total}s -> %{redirect_url}\n" --max-time 40 "http://datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo" || true
-      - run: curl -4 -sS -o /dev/null -w "https v4: %{http_code} %{time_total}s\n" --max-time 40 "https://datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo" || true
-      - run: curl -6 -sS -o /dev/null -w "https v6: %{http_code} %{time_total}s\n" --max-time 20 "https://datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo" || true
-      - run: curl -sS -o /dev/null -w "www.energia.gob.ar https: %{http_code} %{time_total}s\n" --max-time 40 "https://www.energia.gob.ar/" || true
-      - run: curl -sS -o /dev/null -w "argentina.gob.ar https: %{http_code} %{time_total}s\n" --max-time 40 "https://www.argentina.gob.ar/" || true
-      - run: curl -sS --max-time 20 https://ipinfo.io/json || true
+      - name: Probar conexiones
+        run: |
+          API="datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo"
+          head -2 /etc/os-release
+          echo "--- DNS"; getent ahosts datos.energia.gob.ar || true
+          echo "--- IP del runner"; curl -sS --max-time 20 https://ipinfo.io/json || true; echo
+          curl -4 -sS -o /dev/null -w "RES http v4 -> %{http_code} %{time_total}s %{redirect_url}\n" --max-time 40 "http://$API" || echo "RES http v4 FALLO"
+          curl -4 -sS -o /dev/null -w "RES https v4 -> %{http_code} %{time_total}s\n" --max-time 40 "https://$API" || echo "RES https v4 FALLO"
+          curl -6 -sS -o /dev/null -w "RES https v6 -> %{http_code} %{time_total}s\n" --max-time 20 "https://$API" || echo "RES https v6 FALLO"
+          curl -sS -o /dev/null -w "RES www.energia.gob.ar -> %{http_code} %{time_total}s\n" --max-time 40 "https://www.energia.gob.ar/" || echo "RES www.energia FALLO"
+          curl -sS -o /dev/null -w "RES argentina.gob.ar -> %{http_code} %{time_total}s\n" --max-time 40 "https://www.argentina.gob.ar/" || echo "RES argentina.gob.ar FALLO"
