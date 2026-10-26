@@ -4,20 +4,16 @@ on:
     branches: [diagnostico-descarga]
 jobs:
   probar:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
-      - name: Probar conexiones
+      - name: Buscar espejos
         run: |
-          API="datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo"
-          head -2 /etc/os-release
-          echo "--- DNS"; getent ahosts datos.energia.gob.ar || true
-          echo "--- IP del runner"; curl -sS --max-time 20 https://ipinfo.io/json || true; echo
-          curl -4 -sS -o /dev/null -w "RES http v4 -> %{http_code} %{time_total}s %{redirect_url}\n" --max-time 40 "http://$API" || echo "RES http v4 FALLO"
-          curl -4 -sS -o /dev/null -w "RES https v4 -> %{http_code} %{time_total}s\n" --max-time 40 "https://$API" || echo "RES https v4 FALLO"
-          curl -6 -sS -o /dev/null -w "RES https v6 -> %{http_code} %{time_total}s\n" --max-time 20 "https://$API" || echo "RES https v6 FALLO"
-          curl -sS -o /dev/null -w "RES www.energia.gob.ar -> %{http_code} %{time_total}s\n" --max-time 40 "https://www.energia.gob.ar/" || echo "RES www.energia FALLO"
-          curl -sS -o /dev/null -w "RES argentina.gob.ar -> %{http_code} %{time_total}s\n" --max-time 40 "https://www.argentina.gob.ar/" || echo "RES argentina.gob.ar FALLO"
+          for q in "produccion-de-petroleo-y-gas-por-pozo" "energia-produccion-petroleo-gas-por-pozo" "energia_produccion-petroleo-gas-por-pozo"; do
+            echo "--- datos.gob.ar package_show $q"
+            curl -sS --max-time 40 "https://datos.gob.ar/api/3/action/package_show?id=$q" | python3 -c "import sys,json; d=json.load(sys.stdin); [print('RES', r.get('name'), r.get('url')) for r in d['result']['resources']] if d.get('success') else print('RES no existe')" || echo "RES FALLO"
+          done
+          echo "--- busqueda"
+          curl -sS --max-time 40 "https://datos.gob.ar/api/3/action/package_search?q=fractura%20pozos&rows=5" | python3 -c "import sys,json; d=json.load(sys.stdin); [print('PKG', p['name'], [r.get('url') for r in p['resources']][:4]) for p in d['result']['results']]" || echo "PKG FALLO"
+          curl -sS --max-time 40 "https://datos.gob.ar/api/3/action/package_search?q=produccion%20petroleo%20gas%20pozo&rows=5" | python3 -c "import sys,json; d=json.load(sys.stdin); [print('PKG', p['name'], [r.get('url') for r in p['resources']][:6]) for p in d['result']['results']]" || echo "PKG FALLO"
+          echo "--- reintento portal energia con 120s"
+          curl -sS -o /dev/null -w "RES https v4 -> %{http_code} %{time_total}s\n" --max-time 120 "https://datos.energia.gob.ar/api/3/action/package_show?id=produccion-de-petroleo-y-gas-por-pozo" || echo "RES portal FALLO"
