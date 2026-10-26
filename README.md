@@ -70,6 +70,10 @@ Todos los lunes, **GitHub Actions** corre `descargar.py` y `procesar.py` en los 
 Si el Gobierno publicó datos nuevos, guarda los Parquet actualizados en el repo y la app online se actualiza sola.
 También se puede correr a mano desde la pestaña **Actions → Actualizar datos → Run workflow**.
 
+Desde el 19/10/2026 el portal de la Secretaría de Energía no responde a los servidores de GitHub. Si pasa eso,
+la tarea termina con una advertencia y la app sigue mostrando los datos anteriores. Para actualizar desde una PC
+en Argentina: `actualizar.bat` (descarga, procesa y sube los datos nuevos al repo).
+
 ## Fuentes
 
 - [Producción de petróleo y gas por pozo](http://datos.energia.gob.ar/dataset/produccion-de-petroleo-y-gas-por-pozo)

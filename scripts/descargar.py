@@ -17,6 +17,7 @@ Solo usa librerías que ya vienen con Python (no hay que instalar nada).
 import json
 import sys
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -28,6 +29,22 @@ DATASETS = {
     "produccion-de-petroleo-y-gas-por-pozo": ("no convencional", "produccion_no_convencional.csv"),
     "datos-de-fractura-de-pozos-adjunto-iv": ("", "fracturas.csv"),
 }
+
+
+SIN_CONEXION = 2   # código de salida si el portal no responde (lo usa GitHub Actions)
+
+
+def con_reintentos(funcion, *args, intentos=3, espera=30):
+    # El portal a veces tarda o no responde: probamos varias veces antes de rendirnos
+    for intento in range(1, intentos + 1):
+        try:
+            return funcion(*args)
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            print(f"   Intento {intento} de {intentos} falló: {e}")
+            if intento < intentos:
+                time.sleep(espera)
+    print("\nEl portal datos.energia.gob.ar no respondió. Probá abrirlo en el navegador; si anda, corré este script desde tu PC.")
+    sys.exit(SIN_CONEXION)
 
 
 def pedir_json(url):
@@ -58,7 +75,7 @@ def main():
     CARPETA.mkdir(parents=True, exist_ok=True)
     for dataset, (texto, archivo) in DATASETS.items():
         print(f"\n== {dataset}")
-        recursos = pedir_json(PORTAL + dataset)["result"]["resources"]
+        recursos = con_reintentos(pedir_json, PORTAL + dataset)["result"]["resources"]
         recurso = elegir_recurso(recursos, texto)
         if recurso is None:
             # Error claro si el portal cambió: mostramos qué archivos hay para elegir a mano
@@ -67,7 +84,7 @@ def main():
                 print(f"   - {r.get('name')} [{r.get('format')}] {r['url']}")
             sys.exit(1)
         print(f"   Archivo: {recurso.get('name')} (actualizado: {recurso.get('last_modified') or recurso.get('created')})")
-        descargar(recurso["url"], CARPETA / archivo)
+        con_reintentos(descargar, recurso["url"], CARPETA / archivo)
 
 
 if __name__ == "__main__":

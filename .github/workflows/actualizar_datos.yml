@@ -28,13 +28,29 @@ jobs:
       - name: Instalar librerías
         run: pip install pandas pyarrow
 
+      # Si el portal no responde (código 2), avisamos con una advertencia y la app sigue con
+      # los datos anteriores. Cualquier otro error (por ejemplo, que cambió el formato) sí falla.
       - name: Descargar datos del Gobierno
-        run: python scripts/descargar.py
+        id: descarga
+        run: |
+          set +e
+          python scripts/descargar.py
+          codigo=$?
+          if [ $codigo -eq 0 ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          elif [ $codigo -eq 2 ]; then
+            echo "::warning::El portal de la Secretaría de Energía no respondió desde GitHub. La app sigue con los datos anteriores; se puede actualizar desde la PC con actualizar.bat."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            exit $codigo
+          fi
 
       - name: Procesar (limpiar y generar Parquet)
+        if: steps.descarga.outputs.ok == 'true'
         run: python scripts/procesar.py
 
       - name: Guardar los cambios
+        if: steps.descarga.outputs.ok == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
