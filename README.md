@@ -64,6 +64,30 @@ Se abre en el navegador (http://localhost:8501) con 4 páginas:
 
 La app lee los archivos de `datos/procesados/`. Para actualizarla con datos nuevos: `descargar.py` → `procesar.py` → volver a abrirla.
 
+## Versión web (Next.js, para Vercel)
+
+La carpeta `web/` tiene la misma app hecha con **Next.js** (React), lista para publicar en **Vercel**.
+No usa Python: lee los JSON que `procesar.py` deja en `datos/procesados/web/` (los genera `scripts/exportar_web.py`).
+Cada vez que se suben datos nuevos a GitHub (con `actualizar.bat` o GitHub Actions), Vercel vuelve a armar la web sola.
+
+Para verla en tu PC (necesita [Node.js](https://nodejs.org) 20 o más nuevo):
+
+```
+cd web
+npm install
+npm run dev
+```
+
+y abrir http://localhost:3000.
+
+| Archivo | Qué hace |
+|---|---|
+| `web/app/page.tsx` | Página de inicio (Resumen) |
+| `web/app/evolucion/`, `empresas/`, `mapa/` | Las otras 3 páginas (los filtros están en los archivos `...Cliente.tsx`) |
+| `web/lib/datos.ts` | Lee los JSON |
+| `web/lib/formato.ts` | Colores y números en formato argentino |
+| `web/app/globals.css` | Estilos (colores, tarjetas, tamaños) |
+
 ## Actualización automática
 
 Todos los lunes, **GitHub Actions** corre `descargar.py` y `procesar.py` en los servidores de GitHub.
