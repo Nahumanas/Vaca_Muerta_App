@@ -1,5 +1,5 @@
 "use client";
-// Slider con título, valor actual y mínimo/máximo. Es un <input type="range"> con estilo.
+// Slider con título, valor actual (grande, en monoespaciada) y mínimo/máximo.
 export function Slider({
   etiqueta,
   valor,
@@ -22,10 +22,10 @@ export function Slider({
   const pct = ((valor - min) / (max - min)) * 100; // para pintar la parte "llena" del slider
   return (
     <div>
-      <div className="mb-2 flex items-baseline justify-between">
-        <span className="text-xs font-medium text-muted">{etiqueta}</span>
-        <span className="text-lg font-semibold tabular text-fg">
-          {formato(valor)} {unidad && <span className="text-xs font-normal text-muted">{unidad}</span>}
+      <div className="mb-3 flex items-baseline justify-between">
+        <span className="rotulo">{etiqueta}</span>
+        <span className="tabular text-2xl text-fg">
+          {formato(valor)} {unidad && <span className="text-xs text-dim">{unidad}</span>}
         </span>
       </div>
       <input
@@ -39,7 +39,7 @@ export function Slider({
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ "--pct": `${pct}%` } as React.CSSProperties}
       />
-      <div className="mt-1 flex justify-between text-[11px] text-muted tabular">
+      <div className="mt-2 flex justify-between tabular text-[11px] text-dim">
         <span>{formato(min)}</span>
         <span>{formato(max)}</span>
       </div>

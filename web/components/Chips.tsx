@@ -6,9 +6,9 @@ import { cn } from "@/lib/cn";
 
 type Props = { opciones: string[]; elegidas: string[]; onChange: (v: string[]) => void; vacio?: string; visibles?: number };
 
-const base = "rounded-full border px-2.5 py-1 text-xs transition-colors";
-const apagado = "border-border bg-panel-2 text-muted hover:text-fg hover:border-accent";
-const prendido = "border-accent bg-accent text-white";
+const base = "border px-2 py-0.5 text-xs transition-colors";
+const apagado = "border-border text-muted hover:border-dim hover:text-fg";
+const prendido = "border-oil bg-oil text-bg";
 
 export default function Chips({ opciones, elegidas, onChange, vacio = "Todas", visibles = 12 }: Props) {
   const [verTodas, setVerTodas] = useState(false);

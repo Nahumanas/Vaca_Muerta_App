@@ -4,11 +4,13 @@
 // medianas reales de tabla_modelo (pozos de ~500 m rinden ~120 bbl/d en su 1er año; de ~3.000 m, ~650-750).
 // Cuando el modelo esté entrenado, esta ruta se puede borrar y apuntar NEXT_PUBLIC_ML_API_URL a la API de Python.
 import { NextResponse } from "next/server";
+import { MOSTRAR_ML } from "@/lib/config";
 import { LIMITES, type EntradaPrediccion, type RespuestaPrediccion } from "@/lib/ml";
 
 const dentro = (v: unknown, l: { min: number; max: number }) => typeof v === "number" && v >= l.min && v <= l.max;
 
 export async function POST(request: Request) {
+  if (!MOSTRAR_ML) return NextResponse.json({ error: "No disponible" }, { status: 404 });
   let entrada: EntradaPrediccion;
   try {
     entrada = await request.json();

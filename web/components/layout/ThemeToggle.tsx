@@ -27,11 +27,10 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cambiar}
-      className="flex items-center gap-2 rounded-lg border border-border bg-panel-2 px-2.5 py-1.5 text-xs text-muted hover:text-fg"
+      className="tabular text-[11px] uppercase tracking-wider text-dim hover:text-fg"
       aria-label={tema === "dark" ? "Pasar a modo claro" : "Pasar a modo oscuro"}
     >
-      <span aria-hidden>{tema === "dark" ? "☀" : "☾"}</span>
-      {tema === "dark" ? "Modo claro" : "Modo oscuro"}
+      {tema === "dark" ? "Claro" : "Oscuro"}
     </button>
   );
 }

@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import Chips from "@/components/Chips";
 import { KPICard } from "@/components/DashboardKPIs";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
 import type { Pozo } from "@/lib/datos";
 import { num } from "@/lib/formato";
 
@@ -44,43 +44,50 @@ export default function MapaCliente({ pozos }: { pozos: Pozo[] }) {
 
   return (
     <>
-      <Card className="mb-4">
-        <CardBody className="space-y-4 pt-4">
+      <Fila>
+        <Card className="space-y-5 py-6">
           <div>
-            <p className="mb-2 text-xs font-medium text-muted">Empresas</p>
+            <p className="rotulo mb-2">Empresas</p>
             <Chips opciones={grupos} elegidas={elegidas} onChange={setElegidas} />
           </div>
           <div>
-            <p className="mb-2 text-xs font-medium text-muted">Tipo de pozo</p>
+            <p className="rotulo mb-2">Tipo de pozo</p>
             <Chips opciones={tipos} elegidas={tiposElegidos} onChange={setTiposElegidos} vacio="Todos" />
           </div>
           <label className="flex cursor-pointer items-center gap-2 text-sm text-muted">
             <input type="checkbox" className="accent-[var(--oil)]" checked={soloActivos} onChange={(e) => setSoloActivos(e.target.checked)} />
             Solo pozos que produjeron el último mes
           </label>
-        </CardBody>
-      </Card>
+        </Card>
+      </Fila>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <KPICard kpi={{ id: "n", titulo: "Pozos en el mapa", valor: sel.length, unidad: "pozos", color: "neutro", variaciones: [] }} />
-        <KPICard kpi={{ id: "acum", titulo: "Petróleo acumulado", valor: sel.reduce((s, p) => s + p.pet_acum_kbbl, 0) / 1000, unidad: "millones de bbl", color: "oil", variaciones: [] }} />
-        <KPICard kpi={{ id: "act", titulo: "Produjeron el último mes", valor: sel.filter((p) => p.ultimo_mes === ultimoMes).length, unidad: "pozos", color: "neutro", variaciones: [] }} />
-      </div>
+      <Fila className="sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
+        {[
+          { id: "n", titulo: "Pozos en el mapa", valor: sel.length, unidad: "pozos" },
+          { id: "acum", titulo: "Petróleo acumulado", valor: sel.reduce((s, p) => s + p.pet_acum_kbbl, 0) / 1000, unidad: "millones de bbl", color: "oil" as const },
+          { id: "act", titulo: "Produjeron el último mes", valor: sel.filter((p) => p.ultimo_mes === ultimoMes).length, unidad: "pozos" },
+        ].map((k) => (
+          <Card key={k.id} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
+            <KPICard kpi={{ ...k, variaciones: [] }} />
+          </Card>
+        ))}
+      </Fila>
 
       {sel.length === 0 ? (
-        <Card className="mt-4 p-5 text-sm text-muted">No hay pozos para ese filtro.</Card>
+        <p className="py-8 text-sm text-muted">No hay pozos para ese filtro.</p>
       ) : (
         <>
-          <Card className="mt-4 p-1">
+          <div className="border-b border-border py-7">
             <WellMap pozos={sel} />
-          </Card>
+          </div>
 
-          <Card className="mt-4">
+          <Fila>
+          <Card>
             <CardHeader titulo="Los 10 pozos que más petróleo produjeron" />
             <CardBody className="overflow-x-auto">
-              <table className="w-full text-sm tabular">
+              <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted">
+                  <tr className="border-b border-border text-left rotulo">
                     <th className="py-2 pr-4 font-medium">Pozo</th>
                     <th className="py-2 pr-4 font-medium">Empresa</th>
                     <th className="py-2 pr-4 font-medium">Área</th>
@@ -91,17 +98,18 @@ export default function MapaCliente({ pozos }: { pozos: Pozo[] }) {
                 <tbody>
                   {top10.map((p) => (
                     <tr key={p.sigla} className="border-b border-border/60 last:border-0">
-                      <td className="py-2 pr-4 whitespace-nowrap">{p.sigla}</td>
+                      <td className="py-2 pr-4 whitespace-nowrap tabular text-fg">{p.sigla}</td>
                       <td className="py-2 pr-4 whitespace-nowrap">{p.grupo}</td>
                       <td className="py-2 pr-4 whitespace-nowrap text-muted">{p.area}</td>
-                      <td className="py-2 pr-4 text-muted">{mmyyyy(p.primer_mes)}</td>
-                      <td className="py-2 text-right">{num(p.pet_acum_kbbl)}</td>
+                      <td className="py-2 pr-4 tabular text-dim">{mmyyyy(p.primer_mes)}</td>
+                      <td className="py-2 text-right tabular text-fg">{num(p.pet_acum_kbbl)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </CardBody>
           </Card>
+          </Fila>
         </>
       )}
     </>

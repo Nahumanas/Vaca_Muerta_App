@@ -5,7 +5,8 @@ import { DashboardKPIs } from "@/components/DashboardKPIs";
 import MarketShareChart from "@/components/MarketShareChart";
 import ProductionChart from "@/components/ProductionChart";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
+import { MOSTRAR_ML } from "@/lib/config";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { cargarDiseno, cargarEmpresas, cargarInfo, cargarResumen } from "@/lib/datos";
 import { anioDe, mesTexto, num, restarMeses } from "@/lib/formato";
@@ -52,30 +53,33 @@ export default function Inicio() {
   const dFin = diseno.find((d) => d.anio_fractura === anioCerrado)!;
   const cien = (x: number) => Math.round(x / 100) * 100;
 
+  const enlace = (href: string) => (
+    <Link href={href} className="tabular text-[11px] uppercase tracking-wider text-dim hover:text-oil">
+      Ver detalle →
+    </Link>
+  );
+
   return (
     <>
       <PageHeader
-        titulo="Panel general"
+        titulo="Vaca Muerta, mes a mes"
         bajada="Producción de petróleo y gas de la formación Vaca Muerta, pozo por pozo, con los datos oficiales de la Secretaría de Energía."
         derecha={<Badge>Último dato · {mesTexto(ultimo.fecha)}</Badge>}
       />
 
       <DashboardKPIs kpis={kpis} />
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
+      <Fila className="xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader
-            titulo="Evolución · Petróleo"
+            titulo="Evolución del petróleo"
             descripcion={`Miles de barriles por día. De ${num(base.pet)} mil (promedio ${ANIO_BASE}) a ${num(ultimo.petroleo_kbbl_d)} mil en ${mesTexto(ultimo.fecha)}.`}
-            accion={
-              <Link href="/evolucion" className="text-xs text-muted hover:text-fg">
-                Ver detalle →
-              </Link>
-            }
+            accion={enlace("/evolucion")}
           />
           <CardBody>
             <ProductionChart
               datos={serie}
+              alto={340}
               serie={{ clave: "petroleo", nombre: "Petróleo", unidad: "mil bbl/d", color: "oil", decimales: 1 }}
               extras={[
                 { clave: "gas", nombre: "Gas", unidad: "MMm³/d", decimales: 1 },
@@ -89,27 +93,26 @@ export default function Inicio() {
 
         <Card>
           <CardHeader
-            titulo="Empresas · Market share del petróleo"
-            descripcion={`${mesTexto(desde)} a ${mesTexto(ultimo.fecha)}`}
-            accion={
-              <Link href="/empresas" className="text-xs text-muted hover:text-fg">
-                Ver detalle →
-              </Link>
-            }
+            titulo="Market share"
+            descripcion={`Petróleo, ${mesTexto(desde)} a ${mesTexto(ultimo.fecha)}`}
+            accion={enlace("/empresas")}
           />
           <CardBody>
-            <MarketShareChart datos={topConResto(participacion, 8)} destacadas={[lider.grupo, segunda.grupo]} />
+            <MarketShareChart datos={topConResto(participacion, 8)} destacadas={[lider.grupo]} />
           </CardBody>
         </Card>
-      </div>
+      </Fila>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-3">
+      <Fila className="xl:grid-cols-3">
         <Card className="xl:col-span-2">
-          <CardHeader titulo="Evolución · Gas" descripcion="Millones de m³ por día. Sube en invierno y baja en verano: acompaña la demanda de calefacción." />
+          <CardHeader
+            titulo="Evolución del gas"
+            descripcion="Millones de m³ por día. Sube en invierno y baja en verano: acompaña la demanda de calefacción."
+          />
           <CardBody>
             <ProductionChart
               datos={serie}
-              alto={300}
+              alto={280}
               serie={{ clave: "gas", nombre: "Gas", unidad: "MMm³/d", color: "gas", decimales: 1 }}
               extras={[
                 { clave: "petroleo", nombre: "Petróleo", unidad: "mil bbl/d", decimales: 1 },
@@ -122,41 +125,52 @@ export default function Inicio() {
         <Card>
           <CardHeader titulo="Lo que muestran los datos" />
           <CardBody>
-            <ul className="space-y-3 text-sm leading-relaxed text-muted">
-              <li>
-                <strong className="text-fg">Vaca Muerta es el {num(info.pct_petroleo_vm, 1)}%</strong> del petróleo no
-                convencional del país ({num(info.pozos)} pozos en la base).
-              </li>
-              <li>
-                El petróleo se multiplicó por{" "}
-                <strong className="text-fg">{num(ultimo.petroleo_kbbl_d / base.pet, 1)}</strong> desde {ANIO_BASE}: es
-                el que explica el giro exportador del Balance Energético.
-              </li>
-              <li>
-                Cada pozo rinde más: de <strong className="text-fg">{num(base.bblPorPozo)}</strong> a{" "}
-                <strong className="text-fg">{num(cerrado.bblPorPozo)} barriles por día</strong> ({ANIO_BASE} contra{" "}
-                {anioCerrado}).
-              </li>
-              <li>
-                <strong className="text-fg">{lider.grupo}</strong> produce el {num(lider.pct, 1)}% del petróleo, seguida
-                por {segunda.grupo} ({num(segunda.pct, 1)}%).
-              </li>
-              <li>
-                La rama horizontal pasó de <strong className="text-fg">{num(cien(dIni.rama_m))} m</strong> ({ANIO_INICIO})
-                a <strong className="text-fg">{num(cien(dFin.rama_m))} m</strong> ({anioCerrado}), y las etapas de
-                fractura de {num(dIni.etapas)} a {num(dFin.etapas)}.
-              </li>
-            </ul>
-            <Link
-              href="/predicciones"
-              className="mt-4 flex items-center justify-between rounded-lg border border-border bg-panel-2 px-3 py-2.5 text-xs text-muted hover:text-fg"
-            >
-              <span>¿Cuánto rinde un pozo según su diseño? Probá el simulador</span>
-              <span aria-hidden>→</span>
-            </Link>
+            <ol className="divide-y divide-border text-sm leading-relaxed">
+              {[
+                <>
+                  <strong className="font-medium text-fg">Vaca Muerta es el {num(info.pct_petroleo_vm, 1)}%</strong> del
+                  petróleo no convencional del país (<span className="tabular">{num(info.pozos)}</span> pozos en la base).
+                </>,
+                <>
+                  El petróleo se multiplicó por{" "}
+                  <strong className="tabular font-medium text-oil">{num(ultimo.petroleo_kbbl_d / base.pet, 1)}</strong>{" "}
+                  desde {ANIO_BASE}: es el que explica el giro exportador del Balance Energético.
+                </>,
+                <>
+                  Cada pozo rinde más: de <strong className="tabular font-medium text-fg">{num(base.bblPorPozo)}</strong> a{" "}
+                  <strong className="tabular font-medium text-fg">{num(cerrado.bblPorPozo)}</strong> barriles por día (
+                  {ANIO_BASE} contra {anioCerrado}).
+                </>,
+                <>
+                  <strong className="font-medium text-fg">{lider.grupo}</strong> produce el{" "}
+                  <span className="tabular">{num(lider.pct, 1)}%</span> del petróleo, seguida por {segunda.grupo} (
+                  <span className="tabular">{num(segunda.pct, 1)}%</span>).
+                </>,
+                <>
+                  La rama horizontal pasó de <strong className="tabular font-medium text-fg">{num(cien(dIni.rama_m))} m</strong>{" "}
+                  ({ANIO_INICIO}) a <strong className="tabular font-medium text-fg">{num(cien(dFin.rama_m))} m</strong> (
+                  {anioCerrado}), y las etapas de fractura de <span className="tabular">{num(dIni.etapas)}</span> a{" "}
+                  <span className="tabular">{num(dFin.etapas)}</span>.
+                </>,
+              ].map((texto, i) => (
+                <li key={i} className="flex gap-4 py-3 first:pt-0">
+                  <span className="tabular text-[11px] text-dim">{String(i + 1).padStart(2, "0")}</span>
+                  <span>{texto}</span>
+                </li>
+              ))}
+            </ol>
+            {MOSTRAR_ML && (
+              <Link
+                href="/predicciones"
+                className="mt-4 flex items-center justify-between border-t border-border pt-4 tabular text-[11px] uppercase tracking-wider text-dim hover:text-oil"
+              >
+                <span>Simulador de rendimiento de pozos</span>
+                <span aria-hidden>→</span>
+              </Link>
+            )}
           </CardBody>
         </Card>
-      </div>
+      </Fila>
     </>
   );
 }

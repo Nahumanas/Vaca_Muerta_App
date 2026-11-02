@@ -1,4 +1,4 @@
-// Título de cada página, con una bajada y algo opcional a la derecha.
+// Título de cada página (serif grande), con bajada y algo opcional a la derecha.
 export function PageHeader({
   titulo,
   bajada,
@@ -9,10 +9,10 @@ export function PageHeader({
   derecha?: React.ReactNode;
 }) {
   return (
-    <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pt-10 pb-8">
       <div className="max-w-3xl">
-        <h1 className="text-xl font-semibold tracking-tight text-fg sm:text-2xl">{titulo}</h1>
-        {bajada && <p className="mt-1 text-sm text-muted">{bajada}</p>}
+        <h1 className="font-serif text-3xl font-medium tracking-tight text-fg sm:text-[2.6rem] sm:leading-tight">{titulo}</h1>
+        {bajada && <p className="mt-3 text-[15px] leading-relaxed text-muted">{bajada}</p>}
       </div>
       {derecha}
     </header>

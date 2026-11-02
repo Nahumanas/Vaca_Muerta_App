@@ -1,13 +1,19 @@
 /*
-  Estilos de toda la web (Tailwind CSS v4).
+  Estilos de toda la web (Tailwind CSS v4). Estilo "terminal de mando":
+  - fondo negro continuo, SIN tarjetas: las secciones se separan con líneas finas y aire;
+  - un solo color de acento (naranja) para lo importante; todo lo demás en grises;
+  - tres fuentes: serif para títulos, sans para textos y monoespaciada para TODOS los números.
 
-  Los colores están definidos UNA sola vez como variables (--bg, --oil, etc.).
-  Hay dos juegos: modo oscuro (por defecto) y modo claro. El botón de tema cambia
-  el atributo data-theme de <html> y con eso se cambian todas las variables.
-  Los colores de petróleo y gas se validaron para que se distingan bien (también
-  para personas con daltonismo) en los dos modos.
+  Los colores están definidos una sola vez como variables. Hay dos juegos: modo oscuro
+  (por defecto) y modo claro "editorial". El botón de tema cambia data-theme en <html>.
 */
 @import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/playfair-display/500.css";
+@import "@fontsource/playfair-display/600.css";
 
 /* "dark:" en Tailwind = cuando <html data-theme="dark"> */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
@@ -15,45 +21,42 @@
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0a0f1a;          /* fondo de la página */
-  --panel: #111a2b;       /* tarjetas */
-  --panel-2: #172238;     /* controles, hover */
-  --border: #22304a;
-  --fg: #e6ebf2;          /* texto principal */
-  --muted: #8b97ab;       /* texto secundario */
-  --oil: #16956d;         /* petróleo: verde petróleo */
-  --oil-soft: rgba(22, 149, 109, 0.16);
-  --gas: #3e9bdc;         /* gas: celeste */
-  --gas-soft: rgba(62, 155, 220, 0.16);
-  --neutral: #4a5872;     /* barras que no se destacan */
-  --grid: rgba(139, 151, 171, 0.14);
-  --up: #34c38f;
-  --down: #f06a6a;
-  --accent: #3e9bdc;
-  /* colores por empresa (paleta categórica validada, siempre en el mismo orden) */
-  --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500;
-  --cat-5: #d55181; --cat-6: #008300; --cat-7: #9085e9; --cat-8: #e66767;
+  --bg: #000000;          /* fondo continuo */
+  --panel: #000000;       /* tooltips y menús (mismo negro, con línea fina) */
+  --panel-2: #0e0e10;     /* hover y pistas de los controles */
+  --border: #1f1f23;      /* líneas divisorias */
+  --fg: #ececee;          /* títulos y números */
+  --muted: #a1a1aa;       /* textos */
+  --dim: #5c5c66;         /* textos de menor importancia, ejes */
+  --oil: #ff5c00;         /* ACENTO: petróleo, sliders, resultado principal */
+  --oil-soft: rgba(255, 92, 0, 0.14);
+  --gas: #d4d4d8;         /* gas en gris claro: el acento queda solo para el petróleo */
+  --gas-soft: rgba(212, 212, 216, 0.10);
+  --neutral: #3a3a41;     /* barras y puntos que no se destacan */
+  --grid: #141417;
+  --up: #3ecf8e;
+  --down: #ff4d4d;
+  --accent: #ff5c00;
 }
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f6f9;
-  --panel: #ffffff;
-  --panel-2: #eef1f5;
-  --border: #dde3eb;
-  --fg: #111827;
-  --muted: #5b6778;
-  --oil: #0f7a5c;
-  --oil-soft: rgba(15, 122, 92, 0.12);
-  --gas: #0b8fc7;
-  --gas-soft: rgba(11, 143, 199, 0.12);
-  --neutral: #b4bdca;
-  --grid: rgba(91, 103, 120, 0.15);
+  --bg: #f7f7f5;          /* tiza */
+  --panel: #f7f7f5;
+  --panel-2: #ededea;
+  --border: #d9d9d4;
+  --fg: #0b0b0b;
+  --muted: #4a4a46;
+  --dim: #8a8a84;
+  --oil: #0f5e73;         /* azul petróleo */
+  --oil-soft: rgba(15, 94, 115, 0.12);
+  --gas: #6b6b66;
+  --gas-soft: rgba(107, 107, 102, 0.10);
+  --neutral: #c8c8c2;
+  --grid: #e6e6e1;
   --up: #12805c;
   --down: #c53030;
-  --accent: #0b6fa8;
-  --cat-1: #2a78d6; --cat-2: #eb6834; --cat-3: #1baf7a; --cat-4: #eda100;
-  --cat-5: #e87ba4; --cat-6: #008300; --cat-7: #6250d6; --cat-8: #e34948;
+  --accent: #0f5e73;
 }
 
 /* Le decimos a Tailwind que use esas variables: así existen bg-panel, text-muted, text-oil, etc. */
@@ -64,6 +67,7 @@
   --color-border: var(--border);
   --color-fg: var(--fg);
   --color-muted: var(--muted);
+  --color-dim: var(--dim);
   --color-oil: var(--oil);
   --color-oil-soft: var(--oil-soft);
   --color-gas: var(--gas);
@@ -72,58 +76,71 @@
   --color-up: var(--up);
   --color-down: var(--down);
   --color-accent: var(--accent);
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
 body {
   background: var(--bg);
-  color: var(--fg);
+  color: var(--muted);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Los números siempre con el mismo ancho: las columnas quedan alineadas */
-.tabular { font-variant-numeric: tabular-nums; }
+/* Todos los números: fuente monoespaciada (aspecto de ingeniería y columnas alineadas) */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
 
-/* Slider (input range) con los colores del tema */
+/* Etiquetas chicas en mayúsculas, estilo terminal */
+.rotulo {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+/* Slider (input range): pista fina, parte llena y botón cuadrado en el color de acento */
 input[type="range"].slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 999px;
-  background: linear-gradient(to right, var(--oil) var(--pct, 50%), var(--panel-2) var(--pct, 50%));
+  height: 2px;
+  background: linear-gradient(to right, var(--oil) var(--pct, 50%), var(--border) var(--pct, 50%));
   outline: none;
   cursor: pointer;
 }
 input[type="range"].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: var(--fg);
-  border: 3px solid var(--oil);
+  width: 14px;
+  height: 14px;
+  background: var(--oil);
+  border: 0;
 }
 input[type="range"].slider::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  background: var(--fg);
-  border: 3px solid var(--oil);
+  border-radius: 0;
+  background: var(--oil);
+  border: 0;
 }
-input[type="range"].slider:focus-visible { box-shadow: 0 0 0 3px var(--oil-soft); }
+input[type="range"].slider:focus-visible { box-shadow: 0 0 0 4px var(--oil-soft); }
 
-/* Recharts: sin borde de foco negro al hacer clic en un gráfico */
+/* Recharts: sin borde de foco al hacer clic en un gráfico */
 .recharts-wrapper *:focus { outline: none; }
 
-/* Popup del mapa con los colores del tema */
+/* Popup del mapa con el estilo del panel */
 .maplibregl-popup-content {
-  background: var(--panel) !important;
-  color: var(--fg);
+  background: var(--bg) !important;
+  color: var(--muted);
   border: 1px solid var(--border);
-  border-radius: 8px !important;
+  border-radius: 0 !important;
   padding: 10px 12px !important;
   font-size: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: none !important;
 }
 .maplibregl-popup-tip { display: none; }
+.maplibregl-ctrl-group { border-radius: 0 !important; }

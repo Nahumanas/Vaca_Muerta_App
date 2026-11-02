@@ -1,5 +1,5 @@
 "use client";
-// Botones tipo "pestañas" para elegir UNA opción (por ejemplo Petróleo / Gas).
+// Opciones para elegir UNA (por ejemplo Petróleo / Gas). La elegida se subraya con el color de acento.
 import { cn } from "@/lib/cn";
 
 export function Segmented<T extends string>({
@@ -14,7 +14,7 @@ export function Segmented<T extends string>({
   etiqueta?: string; // para lectores de pantalla
 }) {
   return (
-    <div role="tablist" aria-label={etiqueta} className="inline-flex rounded-lg border border-border bg-panel-2 p-0.5">
+    <div role="tablist" aria-label={etiqueta} className="inline-flex gap-4">
       {opciones.map((o) => (
         <button
           key={o}
@@ -22,8 +22,8 @@ export function Segmented<T extends string>({
           aria-selected={valor === o}
           onClick={() => onChange(o)}
           className={cn(
-            "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
-            valor === o ? "bg-panel text-fg shadow-sm" : "text-muted hover:text-fg",
+            "border-b pb-1 tabular text-[11px] uppercase tracking-wider transition-colors",
+            valor === o ? "border-oil text-fg" : "border-transparent text-dim hover:text-muted",
           )}
         >
           {o}

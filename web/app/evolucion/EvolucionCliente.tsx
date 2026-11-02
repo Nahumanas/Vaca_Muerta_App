@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Chips from "@/components/Chips";
 import ProductionChart from "@/components/ProductionChart";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
 import type { Evolucion } from "@/lib/datos";
 import { anioDe, kbblD, mmm3D, num, pct, sumarPor } from "@/lib/formato";
@@ -53,24 +53,24 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
 
   return (
     <>
-      <Card className="mb-4">
-        <CardBody className="space-y-4 pt-4">
+      <Fila>
+        <Card className="space-y-5 py-6">
           <div>
-            <p className="mb-2 text-xs font-medium text-muted">Empresas</p>
+            <p className="rotulo mb-2">Empresas</p>
             <Chips opciones={grupos} elegidas={elegidas} onChange={setElegidas} />
           </div>
           <div className="flex flex-wrap gap-4">
             <Select etiqueta="Desde" valor={String(desde)} opciones={anios} onChange={(v) => setDesde(Math.min(Number(v), hasta))} />
             <Select etiqueta="Hasta" valor={String(hasta)} opciones={anios} onChange={(v) => setHasta(Math.max(Number(v), desde))} />
           </div>
-        </CardBody>
-      </Card>
+        </Card>
+      </Fila>
 
       {mensual.length === 0 ? (
-        <Card className="p-5 text-sm text-muted">No hay datos para ese filtro.</Card>
+        <p className="py-8 text-sm text-muted">No hay datos para ese filtro.</p>
       ) : (
         <>
-          <div className="grid gap-4 xl:grid-cols-2">
+          <Fila className="xl:grid-cols-2">
             <Card>
               <CardHeader titulo="Petróleo" descripcion={`Miles de barriles por día · ${tituloEmpresas}`} />
               <CardBody>
@@ -101,18 +101,19 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
                 />
               </CardBody>
             </Card>
-          </div>
-          <p className="mt-2 text-xs text-muted">
+          </Fila>
+          <p className="border-b border-border py-4 text-xs text-dim">
             El gas sube en invierno y baja en verano porque acompaña la demanda de calefacción. El petróleo, en cambio,
             crece de forma más pareja.
           </p>
 
-          <Card className="mt-4">
+          <Fila>
+          <Card>
             <CardHeader titulo="Promedio de cada año" descripcion="El último año puede estar incompleto: es el promedio de los meses publicados hasta ahora." />
             <CardBody className="overflow-x-auto">
-              <table className="w-full text-sm tabular">
+              <table className="w-full tabular text-[13px]">
                 <thead>
-                  <tr className="border-b border-border text-left text-xs text-muted">
+                  <tr className="border-b border-border text-left rotulo">
                     <th className="py-2 pr-4 font-medium">Año</th>
                     <th className="py-2 pr-4 text-right font-medium">Petróleo (mil bbl/d)</th>
                     <th className="py-2 pr-4 text-right font-medium">Gas (MMm³/d)</th>
@@ -123,10 +124,10 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
                 <tbody>
                   {anual.map((a) => (
                     <tr key={a.anio} className="border-b border-border/60 last:border-0">
-                      <td className="py-2 pr-4 text-muted">{a.anio}</td>
-                      <td className="py-2 pr-4 text-right">{num(a.pet, 1)}</td>
-                      <td className="py-2 pr-4 text-right">{num(a.gas, 1)}</td>
-                      <td className="py-2 pr-4 text-right">{num(a.pozos)}</td>
+                      <td className="py-2 pr-4 tabular text-dim">{a.anio}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.pet, 1)}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.gas, 1)}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.pozos)}</td>
                       <td className={`py-2 text-right ${a.crec === null ? "text-muted" : a.crec >= 0 ? "text-up" : "text-down"}`}>
                         {a.crec === null ? "—" : `${a.crec >= 0 ? "▲" : "▼"} ${pct(a.crec)}`}
                       </td>
@@ -136,6 +137,7 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
               </table>
             </CardBody>
           </Card>
+          </Fila>
         </>
       )}
     </>

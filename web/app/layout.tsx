@@ -1,6 +1,6 @@
-// Esqueleto de todas las páginas: barra lateral + contenido.
+// Esqueleto de todas las páginas: menú superior fino + contenido sobre fondo continuo.
 import type { Metadata } from "next";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { TopNav } from "@/components/layout/TopNav";
 import { scriptTema } from "@/components/layout/ThemeToggle";
 import { cargarInfo } from "@/lib/datos";
 import { mesTexto } from "@/lib/formato";
@@ -21,12 +21,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: scriptTema }} />
       </head>
       <body className="min-h-screen">
-        <Sidebar ultimoDato={mesTexto(info.ultimo_mes.slice(0, 7))} />
-        <main className="px-4 py-6 sm:px-6 lg:ml-60 lg:px-8 lg:py-8">
-          <div className="mx-auto max-w-[1400px]">{children}</div>
-          <footer className="mx-auto mt-10 max-w-[1400px] border-t border-border pt-4 text-xs text-muted">
-            Fuente: Secretaría de Energía de la Nación, datos abiertos (Capítulo IV y Adjunto IV). Formación Vaca
-            Muerta. Proyecto de Nahuel Mansilla.
+        <TopNav ultimoDato={mesTexto(info.ultimo_mes.slice(0, 7))} />
+        <main className="mx-auto max-w-[1400px] px-4 sm:px-8">
+          {children}
+          <footer className="flex flex-wrap justify-between gap-4 py-8 text-xs text-dim">
+            <span>
+              Fuente: Secretaría de Energía de la Nación, datos abiertos (Capítulo IV y Adjunto IV). Formación Vaca
+              Muerta. Proyecto de Nahuel Mansilla.
+            </span>
+            <a className="hover:text-fg" href="https://github.com/Nahumanas/Vaca_Muerta_App">
+              Código en GitHub →
+            </a>
           </footer>
         </main>
       </body>

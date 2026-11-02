@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { CartesianGrid, ResponsiveContainer, Scatter, ScatterChart, Tooltip, XAxis, YAxis, ZAxis, type TooltipContentProps } from "recharts";
 import WellYieldPredictor from "@/components/WellYieldPredictor";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
 import type { PozoModelo } from "@/lib/datos";
 import { num } from "@/lib/formato";
 import { LIMITES, type EntradaPrediccion, type RespuestaPrediccion } from "@/lib/ml";
@@ -21,7 +21,7 @@ function DetallePozo({ active, payload }: TooltipContentProps<number, string>) {
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as PozoModelo & { prediccion?: boolean };
   return (
-    <div className="rounded-lg border border-border bg-panel px-3 py-2 text-xs shadow-xl">
+    <div className="border border-border bg-bg px-3 py-2 text-xs">
       <p className="font-medium text-fg">{p.prediccion ? "Tu pozo (proyección)" : `${p.grupo} · ${p.anio}`}</p>
       <p className="text-muted">
         Rama <span className="tabular text-fg">{num(p.rama_m)} m</span> · {num(p.etapas)} etapas
@@ -51,7 +51,7 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
   const punto = resultado ? [{ rama_m: entrada.rama_m, etapas: entrada.etapas, pet_bbl_d: resultado.prediccion_bbl_d, prediccion: true }] : [];
 
   return (
-    <div className="space-y-4">
+    <>
       <WellYieldPredictor
         onCambio={(e, r) => {
           setEntrada(e);
@@ -59,7 +59,7 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
         }}
       />
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <Fila className="xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader
             titulo="Pozos reales: largo de rama vs. petróleo del 1er año"
@@ -69,14 +69,14 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
             <div style={{ height: 340 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <ScatterChart margin={{ top: 8, right: 8, bottom: 8, left: 0 }}>
-                  <CartesianGrid stroke="var(--grid)" />
+                  <CartesianGrid stroke="var(--grid)" strokeDasharray="2 4" />
                   <XAxis
                     type="number"
                     dataKey="rama_m"
                     name="Rama"
                     domain={[0, 5000]}
                     tickFormatter={(v: number) => `${num(v)} m`}
-                    tick={{ fill: "var(--muted)", fontSize: 11 }}
+                    tick={{ fill: "var(--dim)", fontSize: 10.5, fontFamily: "var(--font-mono)" }}
                     tickLine={false}
                     axisLine={{ stroke: "var(--border)" }}
                   />
@@ -84,26 +84,33 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
                     type="number"
                     dataKey="pet_bbl_d"
                     name="Petróleo"
-                    tick={{ fill: "var(--muted)", fontSize: 11 }}
+                    tick={{ fill: "var(--dim)", fontSize: 10.5, fontFamily: "var(--font-mono)" }}
                     tickFormatter={(v: number) => num(v)}
                     tickLine={false}
                     axisLine={false}
                     width={44}
                   />
-                  <ZAxis range={[14, 14]} />
+                  <ZAxis range={[10, 10]} />
                   <Tooltip content={(p) => <DetallePozo {...(p as TooltipContentProps<number, string>)} />} cursor={false} />
-                  <Scatter data={visibles} fill="var(--neutral)" fillOpacity={0.55} isAnimationActive={false} />
-                  <Scatter data={punto} fill="var(--oil)" stroke="var(--fg)" strokeWidth={2} shape="circle" isAnimationActive={false} legendType="none">
-                  </Scatter>
+                  <Scatter data={visibles} fill="var(--muted)" fillOpacity={0.35} isAnimationActive={false} />
+                  <Scatter
+                    data={punto}
+                    isAnimationActive={false}
+                    legendType="none"
+                    // Punto grande, para que "tu pozo" se distinga entre los reales
+                    shape={(props: { cx?: number; cy?: number }) => (
+                      <circle cx={props.cx} cy={props.cy} r={7} fill="var(--oil)" stroke="var(--bg)" strokeWidth={2} />
+                    )}
+                  />
                 </ScatterChart>
               </ResponsiveContainer>
             </div>
-            <p className="mt-2 flex items-center gap-4 text-xs text-muted">
+            <p className="mt-3 flex items-center gap-5 text-xs text-dim">
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-neutral" /> Pozo real
+                <span className="h-2 w-2 rounded-full bg-muted/50" /> Pozo real
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full border-2 border-fg bg-oil" /> Tu pozo (proyección)
+                <span className="h-2.5 w-2.5 rounded-full bg-oil" /> Tu pozo (proyección)
               </span>
             </p>
           </CardBody>
@@ -114,9 +121,9 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
           <CardBody>
             {ref ? (
               <>
-                <p className="text-xs font-medium uppercase tracking-wider text-muted">Mediana real</p>
+                <p className="rotulo">Mediana real</p>
                 <p className="mt-1 flex items-baseline gap-2">
-                  <span className="text-3xl font-semibold tabular text-fg">{num(ref.mediana)}</span>
+                  <span className="tabular text-[2.6rem] leading-none font-medium text-fg">{num(ref.mediana)}</span>
                   <span className="text-xs text-muted">bbl/d</span>
                 </p>
                 <p className="mt-1 text-xs text-muted">
@@ -144,7 +151,7 @@ export default function MLPredictionPanel({ pozos }: { pozos: PozoModelo[] }) {
             </div>
           </CardBody>
         </Card>
-      </div>
-    </div>
+      </Fila>
+    </>
   );
 }

@@ -45,14 +45,14 @@ function Detalle({ active, payload, serie, extras }: TooltipContentProps<number,
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as PuntoSerie;
   return (
-    <div className="min-w-48 rounded-lg border border-border bg-panel px-3 py-2.5 text-xs shadow-xl">
-      <p className="mb-1.5 font-medium text-muted">{mesTexto(p.fecha)}</p>
+    <div className="min-w-52 border border-border bg-bg px-3 py-2.5 text-xs">
+      <p className="rotulo mb-2">{mesTexto(p.fecha)}</p>
       <p className="flex items-center justify-between gap-4">
         <span className="flex items-center gap-1.5 text-fg">
-          <span className="h-2 w-2 rounded-full" style={{ background: `var(--${serie.color})` }} />
+          <span className="h-2 w-2" style={{ background: `var(--${serie.color})` }} />
           {serie.nombre}
         </span>
-        <span className="font-semibold tabular text-fg">
+        <span className="tabular text-fg">
           {num(Number(p[serie.clave]), serie.decimales ?? 0)} <span className="font-normal text-muted">{serie.unidad}</span>
         </span>
       </p>
@@ -102,7 +102,7 @@ export default function ProductionChart({
   return (
     <div>
       {conRangos && (
-        <div className="mb-3 flex justify-end">
+        <div className="mb-4 flex justify-end">
           <Segmented opciones={RANGOS} valor={rango} onChange={setRango} etiqueta="Rango de tiempo" />
         </div>
       )}
@@ -111,22 +111,22 @@ export default function ProductionChart({
           <AreaChart data={visibles} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={idGradiente} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={`var(--${serie.color})`} stopOpacity={0.35} />
-                <stop offset="100%" stopColor={`var(--${serie.color})`} stopOpacity={0.02} />
+                <stop offset="0%" stopColor={`var(--${serie.color})`} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={`var(--${serie.color})`} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="var(--grid)" />
+            <CartesianGrid vertical={false} stroke="var(--grid)" strokeDasharray="2 4" />
             <XAxis
               dataKey="fecha"
               ticks={marcas}
               tickFormatter={(f: string) => (rango === "24 meses" ? mesTexto(f) : f.slice(0, 4))}
-              tick={{ fill: "var(--muted)", fontSize: 11 }}
+              tick={{ fill: "var(--dim)", fontSize: 10.5, fontFamily: "var(--font-mono)" }}
               tickLine={false}
               axisLine={{ stroke: "var(--border)" }}
               minTickGap={16}
             />
             <YAxis
-              tick={{ fill: "var(--muted)", fontSize: 11 }}
+              tick={{ fill: "var(--dim)", fontSize: 10.5, fontFamily: "var(--font-mono)" }}
               tickFormatter={(v: number) => num(v)}
               tickLine={false}
               axisLine={false}
@@ -134,14 +134,14 @@ export default function ProductionChart({
             />
             <Tooltip
               content={(props) => <Detalle {...(props as TooltipContentProps<number, string>)} serie={serie} extras={extras} />}
-              cursor={{ stroke: "var(--muted)", strokeDasharray: "3 3" }}
+              cursor={{ stroke: "var(--dim)", strokeWidth: 1 }}
             />
             {referencia && (
               <ReferenceLine
                 y={referencia.valor}
-                stroke="var(--muted)"
+                stroke="var(--dim)"
                 strokeDasharray="4 4"
-                label={{ value: referencia.etiqueta, position: "insideTopLeft", fill: "var(--muted)", fontSize: 11 }}
+                label={{ value: referencia.etiqueta, position: "insideBottomRight", fill: "var(--dim)", fontSize: 10.5, fontFamily: "var(--font-mono)" }}
               />
             )}
             <Area
@@ -149,9 +149,9 @@ export default function ProductionChart({
               dataKey={serie.clave}
               name={serie.nombre}
               stroke={`var(--${serie.color})`}
-              strokeWidth={2}
+              strokeWidth={1.75}
               fill={`url(#${idGradiente})`}
-              activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--panel)" }}
+              activeDot={{ r: 3.5, strokeWidth: 0, fill: `var(--${serie.color})` }}
               isAnimationActive={false}
             />
           </AreaChart>

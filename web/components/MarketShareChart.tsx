@@ -17,7 +17,7 @@ function Detalle({ active, payload, valorTooltip }: TooltipContentProps<number, 
   if (!active || !payload?.length) return null;
   const p = payload[0].payload as ParticipacionEmpresa;
   return (
-    <div className="rounded-lg border border-border bg-panel px-3 py-2 text-xs shadow-xl">
+    <div className="border border-border bg-bg px-3 py-2 text-xs">
       <p className="font-medium text-fg">{p.grupo}</p>
       <p className="text-muted">
         <span className="tabular text-fg">{num(p.pct, 1)}%</span> del total
@@ -33,13 +33,13 @@ export default function MarketShareChart({ datos, color = "oil", destacadas, val
   return (
     <div style={{ height: alto }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={datos} layout="vertical" margin={{ top: 0, right: 52, bottom: 0, left: 0 }} barCategoryGap={6}>
+        <BarChart data={datos} layout="vertical" margin={{ top: 0, right: 52, bottom: 0, left: 0 }} barCategoryGap={10}>
           <XAxis type="number" hide domain={[0, "dataMax"]} />
           <YAxis
             type="category"
             dataKey="grupo"
             width={118}
-            tick={{ fill: "var(--fg)", fontSize: 12 }}
+            tick={{ fill: "var(--muted)", fontSize: 12, fontFamily: "var(--font-sans)" }}
             tickLine={false}
             axisLine={false}
           />
@@ -47,7 +47,7 @@ export default function MarketShareChart({ datos, color = "oil", destacadas, val
             cursor={{ fill: "var(--panel-2)" }}
             content={(props) => <Detalle {...(props as TooltipContentProps<number, string>)} valorTooltip={valorTooltip} />}
           />
-          <Bar dataKey="pct" radius={[0, 4, 4, 0]} isAnimationActive={false}>
+          <Bar dataKey="pct" radius={0} isAnimationActive={false}>
             {datos.map((d) => (
               <Cell key={d.grupo} fill={resaltar.includes(d.grupo) ? `var(--${color})` : "var(--neutral)"} />
             ))}
@@ -55,7 +55,7 @@ export default function MarketShareChart({ datos, color = "oil", destacadas, val
               dataKey="pct"
               position="right"
               formatter={(v: unknown) => `${num(Number(v), 1)}%`}
-              style={{ fill: "var(--fg)", fontSize: 12, fontVariantNumeric: "tabular-nums" }}
+              style={{ fill: "var(--fg)", fontSize: 11.5, fontFamily: "var(--font-mono)" }}
             />
           </Bar>
         </BarChart>

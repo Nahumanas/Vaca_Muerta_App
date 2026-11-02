@@ -1,10 +1,10 @@
 "use client";
 // Empresas: market share (barras), métricas y evolución de las 5 principales (áreas apiladas).
 import { useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, type TooltipContentProps } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis, type TooltipContentProps } from "recharts";
 import { KPICard } from "@/components/DashboardKPIs";
 import MarketShareChart from "@/components/MarketShareChart";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
 import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
 import type { Empresa } from "@/lib/datos";
@@ -23,15 +23,6 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
   const esPetroleo = producto === "Petróleo";
   const color = esPetroleo ? "oil" : "gas";
   const unidad = esPetroleo ? "mil bbl/d" : "MMm³/d";
-
-  // Cada empresa tiene SIEMPRE el mismo color (no cambia al filtrar): se asigna por su producción histórica
-  const colorDe = useMemo(() => {
-    const total = [...sumarPor(filas, (f) => f.grupo, (f) => f.petroleo_kbbl_d + f.gas_MMm3_d * 6.29)].sort(
-      (a, b) => b[1] - a[1],
-    );
-    const mapa = new Map(total.slice(0, 8).map(([g], i) => [g, `var(--cat-${i + 1})`]));
-    return (g: string) => mapa.get(g) ?? "var(--neutral)";
-  }, [filas]);
 
   const { part, textoPeriodo, conProduccion, dias } = useMemo(() => {
     let sel: Empresa[];
@@ -79,14 +70,17 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
   const porDia = (valor: number) =>
     esPetroleo ? (valor * 6.2898) / dias / 1000 : valor / dias / 1000; // m³ -> mil bbl/d · mil m³ -> MMm³/d
 
+  // Todos los gráficos chicos usan la MISMA escala, así se pueden comparar a simple vista
+  const maximo = Math.max(1, ...series.flatMap((f) => nombresSeries.map((g) => Number((f as Record<string, unknown>)[g] ?? 0))));
+
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-8 border-b border-border py-5">
         <Segmented opciones={PRODUCTOS} valor={producto} onChange={setProducto} etiqueta="Producto" />
         <Select etiqueta="Período" valor={periodo} opciones={periodos} onChange={setPeriodo} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <Fila className="xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader titulo={`Market share del ${producto.toLowerCase()}`} descripcion={textoPeriodo} />
           <CardBody>
@@ -97,91 +91,79 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
             />
           </CardBody>
         </Card>
-        <div className="grid content-start gap-4">
-          <Card className="p-5">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted">Empresa líder</p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-fg">{lider.grupo}</p>
-            <p className="mt-1 text-xs text-muted">Produce el {num(lider.pct, 1)}% del {producto.toLowerCase()}</p>
-          </Card>
-          <KPICard kpi={{ id: "top3", titulo: "Las 3 primeras juntas", valor: top3, decimales: 1, unidad: "% del total", color, variaciones: [] }} />
-          <KPICard kpi={{ id: "n", titulo: "Empresas con producción", valor: conProduccion, unidad: "grupos", color: "neutro", variaciones: [] }} />
-        </div>
-      </div>
+        <Card className="divide-y divide-border py-0">
+          <div className="py-7">
+            <p className="rotulo">Empresa líder</p>
+            <p className="mt-3 font-serif text-4xl font-medium text-fg">{lider.grupo}</p>
+            <p className="mt-2 text-xs text-dim">
+              Produce el <span className="tabular text-oil">{num(lider.pct, 1)}%</span> del {producto.toLowerCase()}
+            </p>
+          </div>
+          <KPICard className="py-7" kpi={{ id: "top3", titulo: "Las 3 primeras juntas", valor: top3, decimales: 1, unidad: "% del total", variaciones: [] }} />
+          <KPICard className="py-7" kpi={{ id: "n", titulo: "Empresas con producción", valor: conProduccion, unidad: "grupos", variaciones: [] }} />
+        </Card>
+      </Fila>
 
-      <Card className="mt-4">
-        <CardHeader
-          titulo={`Evolución de las 5 principales en ${producto.toLowerCase()}`}
-          descripcion={esPetroleo ? "Miles de barriles por día, apilado" : "Millones de m³ por día, apilado"}
-        />
-        <CardBody>
-          {/* Leyenda: cada empresa con su color */}
-          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
-            {nombresSeries.map((g) => (
-              <span key={g} className="flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-sm" style={{ background: g === "Resto" ? "var(--neutral)" : colorDe(g) }} />
-                {g}
-              </span>
-            ))}
-          </div>
-          <div style={{ height: 360 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={series} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-                <CartesianGrid vertical={false} stroke="var(--grid)" />
-                <XAxis
-                  dataKey="fecha"
-                  ticks={series.filter((s) => s.fecha.endsWith("-01")).map((s) => s.fecha)}
-                  tickFormatter={(f: string) => f.slice(0, 4)}
-                  tick={{ fill: "var(--muted)", fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={{ stroke: "var(--border)" }}
-                />
-                <YAxis tick={{ fill: "var(--muted)", fontSize: 11 }} tickFormatter={(v: number) => num(v)} tickLine={false} axisLine={false} width={44} />
-                <Tooltip content={(p) => <DetalleApilado {...(p as TooltipContentProps<number, string>)} unidad={unidad} />} cursor={{ stroke: "var(--muted)", strokeDasharray: "3 3" }} />
-                {nombresSeries.map((g) => {
-                  const c = g === "Resto" ? "var(--neutral)" : colorDe(g);
-                  return (
-                    <Area
-                      key={g}
-                      type="monotone"
-                      dataKey={g}
-                      stackId="1"
-                      stroke="var(--panel)"
-                      strokeWidth={1}
-                      fill={c}
-                      fillOpacity={0.9}
-                      isAnimationActive={false}
-                    />
-                  );
-                })}
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </CardBody>
-      </Card>
+      <Fila>
+        <Card>
+          <CardHeader
+            titulo={`Las 5 principales en ${producto.toLowerCase()}, desde 2018`}
+            descripcion={`${esPetroleo ? "Miles de barriles por día" : "Millones de m³ por día"}. Todos los gráficos tienen la misma escala.`}
+          />
+          <CardBody className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            {nombresSeries.map((g, i) => {
+              const ult = Number((series[series.length - 1] as Record<string, unknown>)?.[g] ?? 0);
+              const resaltar = i === 0;
+              return (
+                <div key={g} className="border-t border-border pt-3">
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                    <span className="truncate text-sm text-fg">{g}</span>
+                    <span className="tabular text-sm text-fg">
+                      {num(ult, 1)} <span className="text-[11px] text-dim">{unidad}</span>
+                    </span>
+                  </div>
+                  <div style={{ height: 110 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={series} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+                        <YAxis hide domain={[0, maximo]} />
+                        <Tooltip
+                          content={(p) => <DetalleChico {...(p as TooltipContentProps<number, string>)} unidad={unidad} />}
+                          cursor={{ stroke: "var(--dim)", strokeWidth: 1 }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey={g}
+                          stroke={resaltar ? `var(--${color})` : "var(--muted)"}
+                          strokeWidth={1.5}
+                          fill={resaltar ? `var(--${color})` : "var(--muted)"}
+                          fillOpacity={resaltar ? 0.18 : 0.08}
+                          isAnimationActive={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-1 flex justify-between tabular text-[10.5px] text-dim">
+                    <span>{series[0]?.fecha.slice(0, 4)}</span>
+                    <span>{mesTexto(series[series.length - 1]?.fecha ?? ultimo)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </CardBody>
+        </Card>
+      </Fila>
     </>
   );
 }
 
-function DetalleApilado({ active, payload, label, unidad }: TooltipContentProps<number, string> & { unidad: string }) {
+function DetalleChico({ active, payload, label, unidad }: TooltipContentProps<number, string> & { unidad: string }) {
   if (!active || !payload?.length) return null;
-  const total = payload.reduce((s, p) => s + Number(p.value ?? 0), 0);
+  const p = payload[0];
   return (
-    <div className="min-w-52 rounded-lg border border-border bg-panel px-3 py-2.5 text-xs shadow-xl">
-      <p className="mb-1.5 font-medium text-muted">{mesTexto(String(label))}</p>
-      {[...payload].reverse().map((p) => (
-        <p key={String(p.dataKey)} className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-1.5 text-muted">
-            <span className="h-2 w-2 rounded-sm" style={{ background: String(p.color) }} />
-            {String(p.dataKey)}
-          </span>
-          <span className="tabular text-fg">{num(Number(p.value), 1)}</span>
-        </p>
-      ))}
-      <p className="mt-1.5 flex justify-between border-t border-border pt-1.5 text-fg">
-        <span>Total</span>
-        <span className="tabular font-semibold">
-          {num(total, 1)} <span className="font-normal text-muted">{unidad}</span>
-        </span>
+    <div className="border border-border bg-bg px-2.5 py-1.5 text-xs">
+      <p className="rotulo">{mesTexto(String((p.payload as { fecha: string }).fecha ?? label))}</p>
+      <p className="tabular text-fg">
+        {num(Number(p.value), 1)} <span className="text-dim">{unidad}</span>
       </p>
     </div>
   );

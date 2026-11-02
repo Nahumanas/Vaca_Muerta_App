@@ -3,7 +3,7 @@
 // Espera 250 ms después del último movimiento para no mandar una consulta por cada píxel.
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Card, CardHeader, Fila } from "@/components/ui/Card";
 import { Slider } from "@/components/ui/Slider";
 import { num } from "@/lib/formato";
 import { LIMITES, pedirPrediccion, type EntradaPrediccion, type RespuestaPrediccion } from "@/lib/ml";
@@ -46,26 +46,18 @@ export default function WellYieldPredictor({ onCambio }: Props) {
   const aPct = (v: number) => `${Math.min(100, (v / escalaMax) * 100)}%`;
 
   return (
-    <Card>
-      <CardHeader
-        titulo="Rendimiento proyectado del pozo"
-        descripcion="Petróleo promedio por día durante el primer año de producción"
-        accion={
-          r && (
-            <Badge variante={r.modelo.tipo === "simulado" ? "aviso" : "sube"}>
-              {r.modelo.tipo === "simulado" ? "Resultado simulado" : `Modelo ${r.modelo.version}`}
-            </Badge>
-          )
-        }
-      />
-      <CardBody className="grid gap-6 md:grid-cols-2">
-        {/* Controles */}
-        <div className="space-y-6">
+    <Fila className="lg:grid-cols-2">
+      {/* Controles */}
+      <Card>
+        <CardHeader
+          titulo="Rendimiento proyectado del pozo"
+          descripcion="Petróleo promedio por día durante el primer año de producción"
+        />
+        <div className="space-y-9 pt-2">
           <Slider
             etiqueta="Largo de rama horizontal"
             valor={entrada.rama_m}
             {...LIMITES.rama_m}
-            paso={LIMITES.rama_m.paso}
             unidad="m"
             formato={(v) => num(v)}
             onChange={(rama_m) => setEntrada((e) => ({ ...e, rama_m }))}
@@ -74,47 +66,52 @@ export default function WellYieldPredictor({ onCambio }: Props) {
             etiqueta="Etapas de fractura"
             valor={entrada.etapas}
             {...LIMITES.etapas}
-            paso={LIMITES.etapas.paso}
             formato={(v) => num(v)}
             onChange={(etapas) => setEntrada((e) => ({ ...e, etapas }))}
           />
         </div>
+      </Card>
 
-        {/* Resultado */}
-        <div className="rounded-lg border border-border bg-panel-2 p-4" aria-live="polite">
-          {error ? (
-            <p className="text-sm text-down">{error}</p>
-          ) : !r ? (
-            <p className="text-sm text-muted">Calculando…</p>
-          ) : (
-            <div className={cargando ? "opacity-60 transition-opacity" : "transition-opacity"}>
-              <p className="text-xs font-medium uppercase tracking-wider text-muted">Proyección</p>
-              <p className="mt-1 flex items-baseline gap-2">
-                <span className="text-4xl font-semibold tracking-tight tabular text-oil">{num(r.prediccion_bbl_d)}</span>
-                <span className="text-sm text-muted">barriles por día</span>
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                Rango probable: <span className="tabular text-fg">{num(r.intervalo.min)} a {num(r.intervalo.max)}</span> bbl/d
-              </p>
-              {/* Barrita con el rango y el valor */}
-              <div className="relative mt-4 h-2 rounded-full bg-panel">
-                <div
-                  className="absolute inset-y-0 rounded-full bg-oil/35"
-                  style={{ left: aPct(r.intervalo.min), width: `calc(${aPct(r.intervalo.max)} - ${aPct(r.intervalo.min)})` }}
-                />
-                <div className="absolute -top-1 h-4 w-1 rounded bg-oil" style={{ left: aPct(r.prediccion_bbl_d) }} />
-              </div>
-              <div className="mt-1 flex justify-between text-[11px] text-muted tabular">
-                <span>0</span>
-                <span>{num(escalaMax)} bbl/d</span>
-              </div>
-              <p className="mt-4 text-[11px] text-muted">
-                {r.modelo.nombre} · v{r.modelo.version}
-              </p>
+      {/* Resultado */}
+      <Card aria-live="polite">
+        {error ? (
+          <p className="text-sm text-down">{error}</p>
+        ) : !r ? (
+          <p className="tabular text-sm text-dim">Calculando…</p>
+        ) : (
+          <div className={cargando ? "opacity-60 transition-opacity" : "transition-opacity"}>
+            <div className="flex items-center justify-between">
+              <p className="rotulo">Proyección</p>
+              <Badge variante={r.modelo.tipo === "simulado" ? "aviso" : "sube"}>
+                {r.modelo.tipo === "simulado" ? "● Resultado simulado" : `● Modelo ${r.modelo.version}`}
+              </Badge>
             </div>
-          )}
-        </div>
-      </CardBody>
-    </Card>
+            <p className="mt-4 flex items-baseline gap-3">
+              <span className="tabular text-7xl leading-none font-medium tracking-tighter text-oil">{num(r.prediccion_bbl_d)}</span>
+              <span className="text-sm text-dim">barriles por día</span>
+            </p>
+            <p className="mt-4 text-xs text-muted">
+              Rango probable <span className="tabular text-fg">{num(r.intervalo.min)} – {num(r.intervalo.max)}</span> bbl/d
+            </p>
+            {/* Regla con el rango y el valor */}
+            <div className="relative mt-6 h-px bg-border">
+              <div
+                className="absolute -top-px h-[3px] bg-oil/40"
+                style={{ left: aPct(r.intervalo.min), width: `calc(${aPct(r.intervalo.max)} - ${aPct(r.intervalo.min)})` }}
+              />
+              <div className="absolute -top-2 h-4 w-px bg-oil" style={{ left: aPct(r.prediccion_bbl_d) }} />
+            </div>
+            <div className="mt-2 flex justify-between tabular text-[10.5px] text-dim">
+              <span>0</span>
+              <span>{num(escalaMax / 2)}</span>
+              <span>{num(escalaMax)} bbl/d</span>
+            </div>
+            <p className="mt-6 tabular text-[10.5px] text-dim">
+              {r.modelo.nombre} · v{r.modelo.version}
+            </p>
+          </div>
+        )}
+      </Card>
+    </Fila>
   );
 }

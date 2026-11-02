@@ -1,5 +1,5 @@
 "use client";
-// Lista desplegable con el estilo del panel.
+// Lista desplegable sin caja: solo una línea abajo.
 export function Select({
   valor,
   opciones,
@@ -12,12 +12,12 @@ export function Select({
   etiqueta: string;
 }) {
   return (
-    <label className="flex items-center gap-2 text-xs text-muted">
-      {etiqueta}
+    <label className="flex items-center gap-2">
+      <span className="rotulo">{etiqueta}</span>
       <select
         value={valor}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-lg border border-border bg-panel-2 px-2 py-1 text-xs text-fg outline-none focus:border-accent"
+        className="border-0 border-b border-border bg-bg py-0.5 pr-1 tabular text-xs text-fg outline-none focus:border-oil"
       >
         {opciones.map((o) => (
           <option key={o}>{o}</option>

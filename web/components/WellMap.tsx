@@ -17,8 +17,8 @@ const ESTILOS = {
 // Escala de color (un solo tono, de tenue a intenso) según el petróleo acumulado, en escala logarítmica:
 // hay pozos de 1 mil barriles y de más de 1 millón.
 const RAMPA = {
-  dark: ["#12352f", "#16956d", "#7fe7c4"],
-  light: ["#bfe5d6", "#0f7a5c", "#053d2d"],
+  dark: ["#3a1a08", "#ff5c00", "#ffd2b3"], // de marrón apagado a naranja y casi blanco
+  light: ["#c9dde2", "#0f5e73", "#05222b"], // azul petróleo
 };
 
 function useTema(): "dark" | "light" {
@@ -70,7 +70,7 @@ export default function WellMap({ pozos }: { pozos: Pozo[] }) {
   };
 
   return (
-    <div className="relative h-[560px] w-full overflow-hidden rounded-xl">
+    <div className="relative h-[600px] w-full overflow-hidden">
       <Map
         // El mapa arranca encuadrando todos los pozos (con un margen)
         initialViewState={{ bounds: encuadre, fitBoundsOptions: { padding: 40 } }}
@@ -90,13 +90,13 @@ export default function WellMap({ pozos }: { pozos: Pozo[] }) {
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 6, 2.5, 10, 5, 13, 8],
               "circle-color": ["interpolate", ["linear"], ["get", "log"], 0, c0, 2, c1, 3.3, c2],
               "circle-stroke-width": 0.5,
-              "circle-stroke-color": tema === "dark" ? "#0a0f1a" : "#ffffff",
+              "circle-stroke-color": tema === "dark" ? "#000000" : "#f7f7f5",
             }}
           />
         </Source>
         {hover && (
           <Popup longitude={hover.lon} latitude={hover.lat} closeButton={false} offset={10} anchor="bottom">
-            <p className="font-semibold">{hover.pozo.sigla}</p>
+            <p className="tabular text-fg">{hover.pozo.sigla}</p>
             <p className="text-muted">
               {hover.pozo.grupo} · {hover.pozo.area}
             </p>
@@ -113,9 +113,9 @@ export default function WellMap({ pozos }: { pozos: Pozo[] }) {
       </Map>
 
       {/* Leyenda de colores */}
-      <div className="pointer-events-none absolute bottom-3 left-3 rounded-lg border border-border bg-panel/90 px-3 py-2 text-[11px] text-muted backdrop-blur">
-        <p className="mb-1 font-medium text-fg">Petróleo acumulado por pozo</p>
-        <div className="h-2 w-44 rounded" style={{ background: `linear-gradient(to right, ${c0}, ${c1}, ${c2})` }} />
+      <div className="pointer-events-none absolute bottom-3 left-3 border border-border bg-bg/90 px-3 py-2 text-[11px] text-muted">
+        <p className="rotulo mb-1.5">Petróleo acumulado por pozo</p>
+        <div className="h-1.5 w-44" style={{ background: `linear-gradient(to right, ${c0}, ${c1}, ${c2})` }} />
         <div className="mt-0.5 flex w-44 justify-between tabular">
           <span>1 mil bbl</span>
           <span>100 mil</span>

@@ -1,7 +1,7 @@
-// Fila de KPIs (métricas clave) de arriba del panel.
+// Fila de KPIs (métricas clave) de arriba del panel. Sin cajas: tres columnas separadas por líneas finas.
 // Recibe los números ya calculados: así sirve igual si mañana vienen de una API en Python.
 import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
+import { Card, Fila } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 import { num, pct } from "@/lib/formato";
 
@@ -13,53 +13,53 @@ export type KPI = {
   valor: number;
   decimales?: number;
   unidad: string;
-  color?: "oil" | "gas" | "neutro"; // franja de color a la izquierda
+  color?: "oil" | "gas" | "neutro"; // el acento (naranja) solo para lo principal
   variaciones: Variacion[];
 };
 
 function Delta({ v }: { v: Variacion }) {
   const sube = v.valor >= 0;
   return (
-    <span className="flex items-center gap-1.5">
+    <span className="flex items-baseline gap-2">
       <Badge variante={sube ? "sube" : "baja"}>
         <span aria-hidden>{sube ? "▲" : "▼"}</span>
         {pct(v.valor)}
       </Badge>
-      <span className="text-[11px] text-muted">vs. {v.contra}</span>
+      <span className="tabular text-[11px] text-dim">vs. {v.contra}</span>
     </span>
   );
 }
 
-export function KPICard({ kpi }: { kpi: KPI }) {
+// Una métrica suelta (se puede poner dentro de cualquier sección)
+export function KPICard({ kpi, className }: { kpi: KPI; className?: string }) {
   return (
-    <Card className="relative overflow-hidden p-5">
-      <span
-        aria-hidden
-        className={cn(
-          "absolute inset-y-0 left-0 w-1",
-          kpi.color === "oil" ? "bg-oil" : kpi.color === "gas" ? "bg-gas" : "bg-neutral",
-        )}
-      />
-      <p className="text-xs font-medium uppercase tracking-wider text-muted">{kpi.titulo}</p>
-      <p className="mt-2 flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tracking-tight tabular text-fg">{num(kpi.valor, kpi.decimales ?? 0)}</span>
-        <span className="text-xs text-muted">{kpi.unidad}</span>
+    <div className={className}>
+      <p className="rotulo">{kpi.titulo}</p>
+      <p className="mt-3 flex items-baseline gap-2">
+        <span className={cn("tabular text-[2.6rem] leading-none font-medium tracking-tight", kpi.color === "oil" ? "text-oil" : "text-fg")}>
+          {num(kpi.valor, kpi.decimales ?? 0)}
+        </span>
+        <span className="text-xs text-dim">{kpi.unidad}</span>
       </p>
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-        {kpi.variaciones.map((v) => (
-          <Delta key={v.contra} v={v} />
-        ))}
-      </div>
-    </Card>
+      {kpi.variaciones.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5">
+          {kpi.variaciones.map((v) => (
+            <Delta key={v.contra} v={v} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 export function DashboardKPIs({ kpis }: { kpis: KPI[] }) {
   return (
-    <section aria-label="Métricas clave" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <Fila aria-label="Métricas clave" className="sm:grid-cols-3 sm:divide-y-0 sm:divide-x">
       {kpis.map((k) => (
-        <KPICard key={k.id} kpi={k} />
+        <Card key={k.id} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
+          <KPICard kpi={k} />
+        </Card>
       ))}
-    </section>
+    </Fila>
   );
 }
