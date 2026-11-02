@@ -80,6 +80,18 @@ def main():
     })
     guardar("pozos", a_columnas(mapa, {"lat": 5, "lon": 5, "pet_acum_kbbl": 2, "gas_acum_mm3": 1}))
 
+    # Predicciones ML: los pozos de la tabla del modelo (diseño del pozo + petróleo del 1er año).
+    # La web los muestra como referencia real al lado de la predicción.
+    modelo = pd.read_parquet(PROCESADOS / "tabla_modelo.parquet")
+    ref = pd.DataFrame({
+        "rama_m": modelo["longitud_rama_horizontal_m"],
+        "etapas": modelo["cantidad_fracturas"],
+        "anio": modelo["anio_fractura"],
+        "grupo": modelo["grupo"],
+        "pet_bbl_d": modelo["pet_12m_m3"] * M3_A_BARRILES / 365,   # promedio diario del 1er año
+    })
+    guardar("modelo_pozos", a_columnas(ref, {"rama_m": 0, "etapas": 0, "pet_bbl_d": 1}))
+
     # info.json se copia tal cual
     info = json.loads((PROCESADOS / "info.json").read_text(encoding="utf-8"))
     guardar("info", info)

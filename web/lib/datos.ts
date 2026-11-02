@@ -33,3 +33,8 @@ export const cargarEvolucion = () => filas<Evolucion>(leer("evolucion"));
 export const cargarDiseno = () => filas<Diseno>(leer("diseno_anual"));
 export const cargarPozos = () => filas<Pozo>(leer("pozos"));
 export const cargarInfo = () => leer<Info>("info");
+
+// Pozos de la tabla del modelo (scripts/procesar.py -> tabla_modelo.parquet):
+// diseño del pozo + petróleo promedio por día en su primer año. Se usa en "Predicciones ML".
+export type PozoModelo = { rama_m: number; etapas: number; anio: number; grupo: string; pet_bbl_d: number };
+export const cargarModelo = () => filas<PozoModelo>(leer("modelo_pozos"));
