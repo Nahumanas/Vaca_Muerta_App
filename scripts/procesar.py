@@ -193,6 +193,10 @@ def main():
     (PROCESADOS / "info.json").write_text(json.dumps(info, indent=2), encoding="utf-8")
     print("Listo:", info)
 
+    # Copia de los datos en JSON para la web de Vercel (ver scripts/exportar_web.py)
+    import exportar_web
+    exportar_web.main()
+
 
 if __name__ == "__main__":
     main()
