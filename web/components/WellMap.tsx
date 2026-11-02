@@ -37,6 +37,8 @@ type Hover = { lon: number; lat: number; pozo: Pozo } | null;
 export default function WellMap({ pozos }: { pozos: Pozo[] }) {
   const tema = useTema();
   const [hover, setHover] = useState<Hover>(null);
+  const [tactil, setTactil] = useState(false);
+  useEffect(() => setTactil(window.matchMedia("(pointer: coarse)").matches), []);
 
   // Los pozos como GeoJSON (el formato que entiende el mapa)
   const geojson = useMemo(
@@ -70,14 +72,17 @@ export default function WellMap({ pozos }: { pozos: Pozo[] }) {
   };
 
   return (
-    <div className="relative h-[600px] w-full overflow-hidden">
+    <div className="relative h-[440px] w-full overflow-hidden sm:h-[600px]">
       <Map
         // El mapa arranca encuadrando todos los pozos (con un margen)
         initialViewState={{ bounds: encuadre, fitBoundsOptions: { padding: 40 } }}
         mapStyle={ESTILOS[tema]}
         interactiveLayerIds={["pozos"]}
         onMouseMove={alMover}
+        onClick={alMover} // en el celular no hay "mouse": tocar un pozo muestra su detalle
         onMouseLeave={() => setHover(null)}
+        // Con un dedo se scrollea la página; para mover el mapa hacen falta dos dedos
+        cooperativeGestures={tactil}
         cursor={hover ? "pointer" : "grab"}
         attributionControl={{ compact: true }}
       >

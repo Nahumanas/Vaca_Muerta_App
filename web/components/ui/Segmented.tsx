@@ -22,7 +22,7 @@ export function Segmented<T extends string>({
           aria-selected={valor === o}
           onClick={() => onChange(o)}
           className={cn(
-            "border-b pb-1 tabular text-[11px] uppercase tracking-wider transition-colors",
+            "border-b py-2 tabular text-[11px] uppercase tracking-wider transition-colors sm:py-0 sm:pb-1",
             valor === o ? "border-oil text-fg" : "border-transparent text-dim hover:text-muted",
           )}
         >

@@ -90,9 +90,9 @@ export default function MapaCliente({ pozos }: { pozos: Pozo[] }) {
                   <tr className="border-b border-border text-left rotulo">
                     <th className="py-2 pr-4 font-medium">Pozo</th>
                     <th className="py-2 pr-4 font-medium">Empresa</th>
-                    <th className="py-2 pr-4 font-medium">Área</th>
-                    <th className="py-2 pr-4 font-medium">Empezó a producir</th>
-                    <th className="py-2 text-right font-medium">Petróleo acumulado (mil bbl)</th>
+                    <th className="hidden py-2 pr-4 font-medium sm:table-cell">Área</th>
+                    <th className="hidden py-2 pr-4 font-medium sm:table-cell">Empezó a producir</th>
+                    <th className="py-2 text-right font-medium">Petróleo (mil bbl)</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -100,8 +100,8 @@ export default function MapaCliente({ pozos }: { pozos: Pozo[] }) {
                     <tr key={p.sigla} className="border-b border-border/60 last:border-0">
                       <td className="py-2 pr-4 whitespace-nowrap tabular text-fg">{p.sigla}</td>
                       <td className="py-2 pr-4 whitespace-nowrap">{p.grupo}</td>
-                      <td className="py-2 pr-4 whitespace-nowrap text-muted">{p.area}</td>
-                      <td className="py-2 pr-4 tabular text-dim">{mmyyyy(p.primer_mes)}</td>
+                      <td className="hidden py-2 pr-4 whitespace-nowrap text-muted sm:table-cell">{p.area}</td>
+                      <td className="hidden py-2 pr-4 tabular text-dim sm:table-cell">{mmyyyy(p.primer_mes)}</td>
                       <td className="py-2 text-right tabular text-fg">{num(p.pet_acum_kbbl)}</td>
                     </tr>
                   ))}

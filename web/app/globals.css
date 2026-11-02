@@ -103,6 +103,11 @@ body {
   color: var(--dim);
 }
 
+/* En el celular los textos en mono se agrandan un poco para que se lean */
+@media (max-width: 640px) {
+  .rotulo { font-size: 11.5px; }
+}
+
 /* Slider (input range): pista fina, parte llena y botón cuadrado en el color de acento */
 input[type="range"].slider {
   -webkit-appearance: none;
@@ -126,6 +131,12 @@ input[type="range"].slider::-moz-range-thumb {
   border-radius: 0;
   background: var(--oil);
   border: 0;
+}
+/* Pantallas táctiles: botón del slider más grande y zona de toque más alta */
+@media (pointer: coarse) {
+  input[type="range"].slider { height: 3px; padding: 14px 0; background-clip: content-box; }
+  input[type="range"].slider::-webkit-slider-thumb { width: 26px; height: 26px; }
+  input[type="range"].slider::-moz-range-thumb { width: 22px; height: 22px; }
 }
 input[type="range"].slider:focus-visible { box-shadow: 0 0 0 4px var(--oil-soft); }
 

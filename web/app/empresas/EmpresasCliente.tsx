@@ -110,19 +110,19 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
             titulo={`Las 5 principales en ${producto.toLowerCase()}, desde 2018`}
             descripcion={`${esPetroleo ? "Miles de barriles por día" : "Millones de m³ por día"}. Todos los gráficos tienen la misma escala.`}
           />
-          <CardBody className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <CardBody className="grid grid-cols-2 gap-x-4 gap-y-6 sm:gap-x-8 sm:gap-y-8 lg:grid-cols-3">
             {nombresSeries.map((g, i) => {
               const ult = Number((series[series.length - 1] as Record<string, unknown>)?.[g] ?? 0);
               const resaltar = i === 0;
               return (
                 <div key={g} className="border-t border-border pt-3">
-                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                  <div className="mb-2 flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-2">
                     <span className="truncate text-sm text-fg">{g}</span>
                     <span className="tabular text-sm text-fg">
                       {num(ult, 1)} <span className="text-[11px] text-dim">{unidad}</span>
                     </span>
                   </div>
-                  <div style={{ height: 110 }}>
+                  <div className="h-20 sm:h-[110px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart data={series} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
                         <YAxis hide domain={[0, maximo]} />
@@ -144,7 +144,7 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
                   </div>
                   <div className="mt-1 flex justify-between tabular text-[10.5px] text-dim">
                     <span>{series[0]?.fecha.slice(0, 4)}</span>
-                    <span>{mesTexto(series[series.length - 1]?.fecha ?? ultimo)}</span>
+                    <span>{(series[series.length - 1]?.fecha ?? ultimo).slice(0, 4)}</span>
                   </div>
                 </div>
               );

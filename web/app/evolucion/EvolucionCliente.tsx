@@ -117,8 +117,8 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
                     <th className="py-2 pr-4 font-medium">Año</th>
                     <th className="py-2 pr-4 text-right font-medium">Petróleo (mil bbl/d)</th>
                     <th className="py-2 pr-4 text-right font-medium">Gas (MMm³/d)</th>
-                    <th className="py-2 pr-4 text-right font-medium">Pozos en producción</th>
-                    <th className="py-2 text-right font-medium">Crecimiento del petróleo</th>
+                    <th className="hidden py-2 pr-4 text-right font-medium sm:table-cell">Pozos en producción</th>
+                    <th className="py-2 text-right font-medium">Crec. petróleo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -127,7 +127,7 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
                       <td className="py-2 pr-4 tabular text-dim">{a.anio}</td>
                       <td className="py-2 pr-4 text-right text-fg">{num(a.pet, 1)}</td>
                       <td className="py-2 pr-4 text-right text-fg">{num(a.gas, 1)}</td>
-                      <td className="py-2 pr-4 text-right text-fg">{num(a.pozos)}</td>
+                      <td className="hidden py-2 pr-4 text-right text-fg sm:table-cell">{num(a.pozos)}</td>
                       <td className={`py-2 text-right ${a.crec === null ? "text-muted" : a.crec >= 0 ? "text-up" : "text-down"}`}>
                         {a.crec === null ? "—" : `${a.crec >= 0 ? "▲" : "▼"} ${pct(a.crec)}`}
                       </td>
