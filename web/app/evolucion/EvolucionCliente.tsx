@@ -2,9 +2,11 @@
 // Parte interactiva de Evolución: los filtros y los gráficos se recalculan en el navegador.
 import { useMemo, useState } from "react";
 import Chips from "@/components/Chips";
-import Grafico from "@/components/Grafico";
+import ProductionChart from "@/components/ProductionChart";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
+import { Select } from "@/components/ui/Select";
 import type { Evolucion } from "@/lib/datos";
-import { AZUL, VERDE, aDia, anioDe, kbblD, mmm3D, num, pct, sumarPor } from "@/lib/formato";
+import { anioDe, kbblD, mmm3D, num, pct, sumarPor } from "@/lib/formato";
 
 export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
   const anioMax = Math.max(...filas.map((f) => anioDe(f.fecha)));
@@ -47,81 +49,95 @@ export default function EvolucionCliente({ filas }: { filas: Evolucion[] }) {
   }, [mensual]);
 
   const tituloEmpresas = elegidas.length ? elegidas.join(", ") : "todas las empresas";
-  const anios = Array.from({ length: anioMax - 2013 + 1 }, (_, i) => 2013 + i);
-  const x = mensual.map((m) => aDia(m.fecha));
+  const anios = Array.from({ length: anioMax - 2013 + 1 }, (_, i) => String(2013 + i));
 
   return (
     <>
-      <div className="tarjeta filtros">
-        <div>
-          <div className="filtro-titulo">Empresas</div>
-          <Chips opciones={grupos} elegidas={elegidas} onChange={setElegidas} />
-        </div>
-        <div className="fila-filtros">
-          <label>
-            <div className="filtro-titulo">Desde</div>
-            <select value={desde} onChange={(e) => setDesde(Math.min(Number(e.target.value), hasta))}>
-              {anios.map((a) => <option key={a}>{a}</option>)}
-            </select>
-          </label>
-          <label>
-            <div className="filtro-titulo">Hasta</div>
-            <select value={hasta} onChange={(e) => setHasta(Math.max(Number(e.target.value), desde))}>
-              {anios.map((a) => <option key={a}>{a}</option>)}
-            </select>
-          </label>
-        </div>
-      </div>
+      <Fila>
+        <Card className="space-y-5 py-6">
+          <div>
+            <p className="rotulo mb-2">Empresas</p>
+            <Chips opciones={grupos} elegidas={elegidas} onChange={setElegidas} />
+          </div>
+          <div className="flex flex-wrap gap-4">
+            <Select etiqueta="Desde" valor={String(desde)} opciones={anios} onChange={(v) => setDesde(Math.min(Number(v), hasta))} />
+            <Select etiqueta="Hasta" valor={String(hasta)} opciones={anios} onChange={(v) => setHasta(Math.max(Number(v), desde))} />
+          </div>
+        </Card>
+      </Fila>
 
       {mensual.length === 0 ? (
-        <div className="aviso">No hay datos para ese filtro.</div>
+        <p className="py-8 text-sm text-muted">No hay datos para ese filtro.</p>
       ) : (
         <>
-          <div className="grilla-2">
-            <div className="tarjeta">
-              <Grafico
-                data={[{ type: "scatter", mode: "lines", x, y: mensual.map((m) => m.petroleo), line: { color: AZUL, width: 2.5 }, hovertemplate: "%{y:,.1f} mil bbl/d<extra></extra>" }]}
-                layout={{ title: { text: `Petróleo · ${tituloEmpresas}`, font: { size: 15 } }, yaxis: { title: { text: "Mil barriles por día" }, rangemode: "tozero" } }}
-              />
-            </div>
-            <div className="tarjeta">
-              <Grafico
-                data={[{ type: "scatter", mode: "lines", x, y: mensual.map((m) => m.gas), line: { color: VERDE, width: 2.5 }, hovertemplate: "%{y:,.1f} MMm³/d<extra></extra>" }]}
-                layout={{ title: { text: `Gas · ${tituloEmpresas}`, font: { size: 15 } }, yaxis: { title: { text: "Millones de m³ por día" }, rangemode: "tozero" } }}
-              />
-            </div>
-          </div>
-          <p className="nota">
+          <Fila className="xl:grid-cols-2">
+            <Card>
+              <CardHeader titulo="Petróleo" descripcion={`Miles de barriles por día · ${tituloEmpresas}`} />
+              <CardBody>
+                <ProductionChart
+                  datos={mensual}
+                  conRangos={false}
+                  rangoInicial="Todo"
+                  serie={{ clave: "petroleo", nombre: "Petróleo", unidad: "mil bbl/d", color: "oil", decimales: 1 }}
+                  extras={[
+                    { clave: "gas", nombre: "Gas", unidad: "MMm³/d", decimales: 1 },
+                    { clave: "pozos", nombre: "Pozos en producción", unidad: "" },
+                  ]}
+                />
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader titulo="Gas" descripcion={`Millones de m³ por día · ${tituloEmpresas}`} />
+              <CardBody>
+                <ProductionChart
+                  datos={mensual}
+                  conRangos={false}
+                  rangoInicial="Todo"
+                  serie={{ clave: "gas", nombre: "Gas", unidad: "MMm³/d", color: "gas", decimales: 1 }}
+                  extras={[
+                    { clave: "petroleo", nombre: "Petróleo", unidad: "mil bbl/d", decimales: 1 },
+                    { clave: "pozos", nombre: "Pozos en producción", unidad: "" },
+                  ]}
+                />
+              </CardBody>
+            </Card>
+          </Fila>
+          <p className="border-b border-border py-4 text-xs text-dim">
             El gas sube en invierno y baja en verano porque acompaña la demanda de calefacción. El petróleo, en cambio,
             crece de forma más pareja.
           </p>
 
-          <h2>Promedio de cada año</h2>
-          <div className="tarjeta tabla-caja">
-            <table>
-              <thead>
-                <tr>
-                  <th>Año</th>
-                  <th className="num">Petróleo (mil bbl/d)</th>
-                  <th className="num">Gas (MMm³/d)</th>
-                  <th className="num">Pozos en producción</th>
-                  <th className="num">Crecimiento del petróleo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {anual.map((a) => (
-                  <tr key={a.anio}>
-                    <td>{a.anio}</td>
-                    <td className="num">{num(a.pet, 1)}</td>
-                    <td className="num">{num(a.gas, 1)}</td>
-                    <td className="num">{num(a.pozos)}</td>
-                    <td className="num">{a.crec === null ? "—" : pct(a.crec)}</td>
+          <Fila>
+          <Card>
+            <CardHeader titulo="Promedio de cada año" descripcion="El último año puede estar incompleto: es el promedio de los meses publicados hasta ahora." />
+            <CardBody className="overflow-x-auto">
+              <table className="w-full tabular text-[13px]">
+                <thead>
+                  <tr className="border-b border-border text-left rotulo">
+                    <th className="py-2 pr-4 font-medium">Año</th>
+                    <th className="py-2 pr-4 text-right font-medium">Petróleo (mil bbl/d)</th>
+                    <th className="py-2 pr-4 text-right font-medium">Gas (MMm³/d)</th>
+                    <th className="py-2 pr-4 text-right font-medium">Pozos en producción</th>
+                    <th className="py-2 text-right font-medium">Crecimiento del petróleo</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="nota">El último año puede estar incompleto: es el promedio de los meses publicados hasta ahora.</p>
+                </thead>
+                <tbody>
+                  {anual.map((a) => (
+                    <tr key={a.anio} className="border-b border-border/60 last:border-0">
+                      <td className="py-2 pr-4 tabular text-dim">{a.anio}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.pet, 1)}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.gas, 1)}</td>
+                      <td className="py-2 pr-4 text-right text-fg">{num(a.pozos)}</td>
+                      <td className={`py-2 text-right ${a.crec === null ? "text-muted" : a.crec >= 0 ? "text-up" : "text-down"}`}>
+                        {a.crec === null ? "—" : `${a.crec >= 0 ? "▲" : "▼"} ${pct(a.crec)}`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardBody>
+          </Card>
+          </Fila>
         </>
       )}
     </>

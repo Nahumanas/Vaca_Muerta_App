@@ -80,13 +80,39 @@ npm run dev
 
 y abrir http://localhost:3000.
 
+Está hecha con **Tailwind CSS** (estilos), **Recharts** (gráficos) y **react-map-gl + MapLibre** (mapa, sin token).
+Diseño "terminal": fondo negro, sin tarjetas (las secciones se separan con líneas finas), un solo color de acento
+(naranja) y tres fuentes: Playfair Display (títulos), DM Sans (textos) e IBM Plex Mono (todos los números).
+El botón "Claro" del menú pasa a un modo claro editorial (fondo tiza y azul petróleo).
+
 | Archivo | Qué hace |
 |---|---|
-| `web/app/page.tsx` | Página de inicio (Resumen) |
-| `web/app/evolucion/`, `empresas/`, `mapa/` | Las otras 3 páginas (los filtros están en los archivos `...Cliente.tsx`) |
+| `web/app/layout.tsx` + `web/components/layout/` | Esqueleto: menú superior con las pestañas y botón de tema |
+| `web/app/page.tsx` | Panel general (KPIs, evolución, market share, hallazgos) |
+| `web/app/evolucion/`, `empresas/`, `mapa/`, `predicciones/` | Las pestañas (los filtros están en los archivos `...Cliente.tsx`) |
+| `web/components/DashboardKPIs.tsx` | Tarjetas de KPIs |
+| `web/components/ProductionChart.tsx` | Gráfico de áreas de producción (con tooltip de datos extra) |
+| `web/components/MarketShareChart.tsx` | Barras horizontales de market share |
+| `web/components/WellMap.tsx` | Mapa de pozos |
+| `web/components/MLPredictionPanel.tsx`, `WellYieldPredictor.tsx` | Pestaña Predicciones ML |
+| `web/components/ui/` | Piezas chicas reutilizables (secciones, etiquetas, slider...) |
+| `web/lib/config.ts` | Interruptores, como el que muestra u oculta la pestaña de ML |
 | `web/lib/datos.ts` | Lee los JSON |
-| `web/lib/formato.ts` | Colores y números en formato argentino |
-| `web/app/globals.css` | Estilos (colores, tarjetas, tamaños) |
+| `web/lib/indicadores.ts` | Cálculo de KPIs y market share |
+| `web/lib/ml.ts` | Contrato con la API del modelo (qué se manda y qué se recibe) |
+| `web/app/api/ml-predictions/route.ts` | API de ejemplo: hoy devuelve un resultado **simulado** |
+| `web/app/globals.css` | Colores del modo oscuro y claro |
+
+### Predicciones ML (preparado para el modelo)
+
+**Está oculta** hasta que el modelo esté listo: no aparece en el menú y `/predicciones` da "página no encontrada".
+Para mostrarla: en Vercel → Settings → Environment Variables, crear `NEXT_PUBLIC_MOSTRAR_ML` = `true` y hacer
+Redeploy. En la PC: crear `web/.env.local` con la línea `NEXT_PUBLIC_MOSTRAR_ML=true`.
+
+La pestaña ya funciona, pero el número que muestra sale de una fórmula simple, no de un modelo.
+Cuando el modelo esté entrenado en Python, hay que hacer una API (por ejemplo con FastAPI) que reciba
+`POST {"rama_m": 2500, "etapas": 40}` y devuelva los campos de `RespuestaPrediccion` en `web/lib/ml.ts`,
+y en Vercel cargar la variable `NEXT_PUBLIC_ML_API_URL` con la dirección de esa API. La web no cambia.
 
 ## Actualización automática
 

@@ -1,22 +1,30 @@
 "use client";
+// Empresas: market share (barras), métricas y evolución de las 5 principales (áreas apiladas).
 import { useMemo, useState } from "react";
-import Grafico from "@/components/Grafico";
-import Metrica from "@/components/Metrica";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis, type TooltipContentProps } from "recharts";
+import { KPICard } from "@/components/DashboardKPIs";
+import MarketShareChart from "@/components/MarketShareChart";
+import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
+import { Segmented } from "@/components/ui/Segmented";
+import { Select } from "@/components/ui/Select";
 import type { Empresa } from "@/lib/datos";
-import { AZUL, GRIS, NARANJA, VERDE, aDia, anioDe, mesTexto, num, restarMeses, sumarPor } from "@/lib/formato";
+import { anioDe, diasDelMes, mesTexto, num, restarMeses, sumarPor } from "@/lib/formato";
+import { calcularParticipacion, topConResto } from "@/lib/indicadores";
 
 const ULT12 = "Últimos 12 meses";
+const PRODUCTOS = ["Petróleo", "Gas"] as const;
 
 export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
-  const [producto, setProducto] = useState<"Petróleo" | "Gas">("Petróleo");
+  const [producto, setProducto] = useState<(typeof PRODUCTOS)[number]>("Petróleo");
   const [periodo, setPeriodo] = useState(ULT12);
 
   const ultimo = filas.reduce((m, f) => (f.fecha > m ? f.fecha : m), filas[0].fecha);
   const periodos = [ULT12, ...Array.from({ length: anioDe(ultimo) - 2017 }, (_, i) => String(anioDe(ultimo) - i))];
   const esPetroleo = producto === "Petróleo";
-  const color = esPetroleo ? AZUL : VERDE;
+  const color = esPetroleo ? "oil" : "gas";
+  const unidad = esPetroleo ? "mil bbl/d" : "MMm³/d";
 
-  const { part, textoPeriodo, conProduccion } = useMemo(() => {
+  const { part, textoPeriodo, conProduccion, dias } = useMemo(() => {
     let sel: Empresa[];
     let texto: string;
     if (periodo === ULT12) {
@@ -27,105 +35,136 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
       sel = filas.filter((f) => anioDe(f.fecha) === Number(periodo));
       texto = periodo;
     }
-    const ranking = [...sumarPor(sel, (f) => f.grupo, (f) => (esPetroleo ? f.prod_pet : f.prod_gas))].sort(
-      (a, b) => b[1] - a[1],
-    );
-    const total = ranking.reduce((s, [, v]) => s + v, 0);
+    const part = calcularParticipacion(sel, esPetroleo ? "pet" : "gas");
     return {
-      part: ranking.map(([grupo, v]) => ({ grupo, pct: (v / total) * 100 })),
+      part,
       textoPeriodo: texto,
-      conProduccion: ranking.filter(([, v]) => v > 0).length,
+      conProduccion: part.filter((p) => p.valor > 0).length,
+      dias: [...new Set(sel.map((f) => f.fecha))].reduce((s, f) => s + diasDelMes(f), 0),
     };
   }, [filas, periodo, esPetroleo, ultimo]);
 
-  // Top 10 + "Resto"
-  const top = part.slice(0, 10);
-  if (part.length > 10) top.push({ grupo: "Resto", pct: part.slice(10).reduce((s, p) => s + p.pct, 0) });
-
-  // Evolución de las 5 principales desde 2018
+  // Evolución de las 5 principales desde 2018, en formato "ancho" para Recharts: { fecha, YPF: .., Vista: .. }
   const top5 = part.slice(0, 5).map((p) => p.grupo);
+  const claveTop = top5.join("|");
   const series = useMemo(() => {
     const clave = esPetroleo ? "petroleo_kbbl_d" : "gas_MMm3_d";
-    const porGrupo = new Map<string, Map<string, number>>();
+    const porMes = new Map<string, Record<string, number>>();
     for (const f of filas) {
       if (f.fecha < "2018-01") continue;
       const g = top5.includes(f.grupo) ? f.grupo : "Resto";
-      const m = porGrupo.get(g) ?? new Map<string, number>();
-      m.set(f.fecha, (m.get(f.fecha) ?? 0) + f[clave]);
-      porGrupo.set(g, m);
+      const fila = porMes.get(f.fecha) ?? {};
+      fila[g] = (fila[g] ?? 0) + f[clave];
+      porMes.set(f.fecha, fila);
     }
-    const paleta = [color, NARANJA, "#7a5ac8", "#d4a017", "#3d3d3a", "#c8c7c2"];
-    return [...top5, "Resto"].map((g, i) => {
-      const puntos = [...(porGrupo.get(g) ?? new Map())].sort(([a], [b]) => a.localeCompare(b));
-      return {
-        type: "scatter", mode: "lines", stackgroup: "uno", name: g,
-        x: puntos.map(([f]) => aDia(f)), y: puntos.map(([, v]) => v),
-        line: { color: paleta[i], width: 0.5 }, fillcolor: paleta[i],
-        hovertemplate: `${g}: %{y:,.1f}<extra></extra>`,
-      };
-    });
-  }, [filas, esPetroleo, top5.join("|"), color]);
+    // Si una empresa no tiene dato un mes, va 0 (si no, el área apilada queda con un "agujero")
+    const ceros = Object.fromEntries([...top5, "Resto"].map((g) => [g, 0]));
+    return [...porMes].sort(([a], [b]) => a.localeCompare(b)).map(([fecha, v]) => ({ fecha, ...ceros, ...v }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filas, esPetroleo, claveTop]);
+  const nombresSeries = [...top5, "Resto"];
 
   const lider = part[0];
+  const top3 = part.slice(0, 3).reduce((s, p) => s + p.pct, 0);
+  // Pasar el total del período a "por día" para el tooltip de las barras
+  const porDia = (valor: number) =>
+    esPetroleo ? (valor * 6.2898) / dias / 1000 : valor / dias / 1000; // m³ -> mil bbl/d · mil m³ -> MMm³/d
+
+  // Todos los gráficos chicos usan la MISMA escala, así se pueden comparar a simple vista
+  const maximo = Math.max(1, ...series.flatMap((f) => nombresSeries.map((g) => Number((f as Record<string, unknown>)[g] ?? 0))));
 
   return (
     <>
-      <div className="tarjeta fila-filtros" style={{ marginBottom: 20 }}>
-        <div>
-          <div className="filtro-titulo">Producto</div>
-          <div className="chips">
-            {(["Petróleo", "Gas"] as const).map((p) => (
-              <button key={p} className={producto === p ? "chip activo" : "chip"} onClick={() => setProducto(p)}>
-                {p}
-              </button>
-            ))}
+      <div className="flex flex-wrap items-center gap-8 border-b border-border py-5">
+        <Segmented opciones={PRODUCTOS} valor={producto} onChange={setProducto} etiqueta="Producto" />
+        <Select etiqueta="Período" valor={periodo} opciones={periodos} onChange={setPeriodo} />
+      </div>
+
+      <Fila className="xl:grid-cols-3">
+        <Card className="xl:col-span-2">
+          <CardHeader titulo={`Market share del ${producto.toLowerCase()}`} descripcion={textoPeriodo} />
+          <CardBody>
+            <MarketShareChart
+              datos={topConResto(part, 10)}
+              color={color}
+              valorTooltip={(p) => `${num(porDia(p.valor), 1)} ${unidad} en promedio`}
+            />
+          </CardBody>
+        </Card>
+        <Card className="divide-y divide-border py-0">
+          <div className="py-7">
+            <p className="rotulo">Empresa líder</p>
+            <p className="mt-3 font-serif text-4xl font-medium text-fg">{lider.grupo}</p>
+            <p className="mt-2 text-xs text-dim">
+              Produce el <span className="tabular text-oil">{num(lider.pct, 1)}%</span> del {producto.toLowerCase()}
+            </p>
           </div>
-        </div>
-        <label>
-          <div className="filtro-titulo">Período</div>
-          <select value={periodo} onChange={(e) => setPeriodo(e.target.value)}>
-            {periodos.map((p) => <option key={p}>{p}</option>)}
-          </select>
-        </label>
-      </div>
+          <KPICard className="py-7" kpi={{ id: "top3", titulo: "Las 3 primeras juntas", valor: top3, decimales: 1, unidad: "% del total", variaciones: [] }} />
+          <KPICard className="py-7" kpi={{ id: "n", titulo: "Empresas con producción", valor: conProduccion, unidad: "grupos", variaciones: [] }} />
+        </Card>
+      </Fila>
 
-      <div className="grilla-3-2">
-        <div className="tarjeta">
-          <Grafico
-            alto={460}
-            fechas={false}
-            data={[
-              {
-                type: "bar", orientation: "h",
-                x: top.map((t) => t.pct), y: top.map((t) => t.grupo),
-                text: top.map((t) => `${num(t.pct, 1)}%`), textposition: "outside", cliponaxis: false,
-                marker: { color: top.map((_, i) => (i === 0 ? color : GRIS)) },
-                hovertemplate: "%{y}: %{x:.1f}%<extra></extra>",
-              },
-            ]}
-            layout={{
-              title: { text: `Participación en el ${producto.toLowerCase()} · ${textoPeriodo}`, font: { size: 15 } },
-              hovermode: "closest",
-              yaxis: { autorange: "reversed", gridcolor: "rgba(0,0,0,0)" },
-              xaxis: { title: { text: "% del total" }, ticksuffix: "%", range: [0, (top[0]?.pct ?? 0) * 1.15] },
-            }}
+      <Fila>
+        <Card>
+          <CardHeader
+            titulo={`Las 5 principales en ${producto.toLowerCase()}, desde 2018`}
+            descripcion={`${esPetroleo ? "Miles de barriles por día" : "Millones de m³ por día"}. Todos los gráficos tienen la misma escala.`}
           />
-        </div>
-        <div className="metricas-columna">
-          <Metrica titulo={`Empresa líder en ${producto.toLowerCase()}`} valor={lider.grupo} nota={`Produce el ${num(lider.pct, 1)}% del total`} />
-          <Metrica titulo="Las 3 primeras juntas" valor={`${num(part.slice(0, 3).reduce((s, p) => s + p.pct, 0), 1)}%`} />
-          <Metrica titulo="Empresas con producción" valor={String(conProduccion)} />
-        </div>
-      </div>
-
-      <h2>Evolución de las 5 principales en {producto.toLowerCase()}</h2>
-      <div className="tarjeta">
-        <Grafico
-          alto={440}
-          data={series}
-          layout={{ legend: { orientation: "h", y: 1.08, x: 0, traceorder: "normal" }, yaxis: { title: { text: esPetroleo ? "Mil barriles por día" : "Millones de m³ por día" } } }}
-        />
-      </div>
+          <CardBody className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            {nombresSeries.map((g, i) => {
+              const ult = Number((series[series.length - 1] as Record<string, unknown>)?.[g] ?? 0);
+              const resaltar = i === 0;
+              return (
+                <div key={g} className="border-t border-border pt-3">
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
+                    <span className="truncate text-sm text-fg">{g}</span>
+                    <span className="tabular text-sm text-fg">
+                      {num(ult, 1)} <span className="text-[11px] text-dim">{unidad}</span>
+                    </span>
+                  </div>
+                  <div style={{ height: 110 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={series} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+                        <YAxis hide domain={[0, maximo]} />
+                        <Tooltip
+                          content={(p) => <DetalleChico {...(p as TooltipContentProps<number, string>)} unidad={unidad} />}
+                          cursor={{ stroke: "var(--dim)", strokeWidth: 1 }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey={g}
+                          stroke={resaltar ? `var(--${color})` : "var(--muted)"}
+                          strokeWidth={1.5}
+                          fill={resaltar ? `var(--${color})` : "var(--muted)"}
+                          fillOpacity={resaltar ? 0.18 : 0.08}
+                          isAnimationActive={false}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-1 flex justify-between tabular text-[10.5px] text-dim">
+                    <span>{series[0]?.fecha.slice(0, 4)}</span>
+                    <span>{mesTexto(series[series.length - 1]?.fecha ?? ultimo)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </CardBody>
+        </Card>
+      </Fila>
     </>
+  );
+}
+
+function DetalleChico({ active, payload, label, unidad }: TooltipContentProps<number, string> & { unidad: string }) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0];
+  return (
+    <div className="border border-border bg-bg px-2.5 py-1.5 text-xs">
+      <p className="rotulo">{mesTexto(String((p.payload as { fecha: string }).fecha ?? label))}</p>
+      <p className="tabular text-fg">
+        {num(Number(p.value), 1)} <span className="text-dim">{unidad}</span>
+      </p>
+    </div>
   );
 }
