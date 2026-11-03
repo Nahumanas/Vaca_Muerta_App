@@ -27,7 +27,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={cambiar}
-      className="tabular text-[11px] uppercase tracking-wider text-dim hover:text-fg"
+      className="-mr-2 px-2 py-3 tabular text-[11px] uppercase tracking-wider text-dim hover:text-fg"
       aria-label={tema === "dark" ? "Pasar a modo claro" : "Pasar a modo oscuro"}
     >
       {tema === "dark" ? "Claro" : "Oscuro"}

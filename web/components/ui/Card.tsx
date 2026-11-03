@@ -18,7 +18,7 @@ export function Fila({ className, ...props }: Props) {
 }
 
 export function Card({ className, ...props }: Props) {
-  return <section className={cn("min-w-0 py-7 lg:px-8 lg:first:pl-0 lg:last:pr-0", className)} {...props} />;
+  return <section className={cn("min-w-0 py-6 sm:py-7 lg:px-8 lg:first:pl-0 lg:last:pr-0", className)} {...props} />;
 }
 
 export function CardHeader({

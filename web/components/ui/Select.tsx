@@ -17,7 +17,7 @@ export function Select({
       <select
         value={valor}
         onChange={(e) => onChange(e.target.value)}
-        className="border-0 border-b border-border bg-bg py-0.5 pr-1 tabular text-xs text-fg outline-none focus:border-oil"
+        className="border-0 border-b border-border bg-bg py-2 pr-1 tabular text-sm text-fg outline-none focus:border-oil sm:py-0.5 sm:text-xs"
       >
         {opciones.map((o) => (
           <option key={o}>{o}</option>

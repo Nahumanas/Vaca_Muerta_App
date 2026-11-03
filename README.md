@@ -92,7 +92,10 @@ El botón "Claro" del menú pasa a un modo claro editorial (fondo tiza y azul pe
 | `web/app/evolucion/`, `empresas/`, `mapa/`, `predicciones/` | Las pestañas (los filtros están en los archivos `...Cliente.tsx`) |
 | `web/components/DashboardKPIs.tsx` | Tarjetas de KPIs |
 | `web/components/ProductionChart.tsx` | Gráfico de áreas de producción (con tooltip de datos extra) |
-| `web/components/MarketShareChart.tsx` | Barras horizontales de market share |
+| `web/components/MainChart.tsx` | Gráfico principal: total o la empresa elegida, con hitos tecnológicos |
+| `web/components/MarketShareRanking.tsx` | Ranking de market share: pasar el mouse o tocar una empresa la elige |
+| `web/components/SmallMultiplesSync.tsx` | Gráficos chicos por empresa con tooltip sincronizado |
+| `web/lib/store.ts` | Estado compartido (Zustand): qué empresa está elegida |
 | `web/components/WellMap.tsx` | Mapa de pozos |
 | `web/components/MLPredictionPanel.tsx`, `WellYieldPredictor.tsx` | Pestaña Predicciones ML |
 | `web/components/ui/` | Piezas chicas reutilizables (secciones, etiquetas, slider...) |

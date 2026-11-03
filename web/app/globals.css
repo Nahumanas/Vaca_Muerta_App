@@ -37,6 +37,7 @@
   --up: #3ecf8e;
   --down: #ff4d4d;
   --accent: #ff5c00;
+  --empresa: #22d3ee;     /* acento de la empresa elegida (el naranja es solo para el total) */
 }
 
 [data-theme="light"] {
@@ -57,6 +58,7 @@
   --up: #12805c;
   --down: #c53030;
   --accent: #0f5e73;
+  --empresa: #c2410c;
 }
 
 /* Le decimos a Tailwind que use esas variables: así existen bg-panel, text-muted, text-oil, etc. */
@@ -76,6 +78,7 @@
   --color-up: var(--up);
   --color-down: var(--down);
   --color-accent: var(--accent);
+  --color-empresa: var(--empresa);
   --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -103,6 +106,11 @@ body {
   color: var(--dim);
 }
 
+/* En el celular los textos en mono se agrandan un poco para que se lean */
+@media (max-width: 640px) {
+  .rotulo { font-size: 11.5px; }
+}
+
 /* Slider (input range): pista fina, parte llena y botón cuadrado en el color de acento */
 input[type="range"].slider {
   -webkit-appearance: none;
@@ -126,6 +134,12 @@ input[type="range"].slider::-moz-range-thumb {
   border-radius: 0;
   background: var(--oil);
   border: 0;
+}
+/* Pantallas táctiles: botón del slider más grande y zona de toque más alta */
+@media (pointer: coarse) {
+  input[type="range"].slider { height: 3px; padding: 14px 0; background-clip: content-box; }
+  input[type="range"].slider::-webkit-slider-thumb { width: 26px; height: 26px; }
+  input[type="range"].slider::-moz-range-thumb { width: 22px; height: 22px; }
 }
 input[type="range"].slider:focus-visible { box-shadow: 0 0 0 4px var(--oil-soft); }
 

@@ -20,6 +20,7 @@ export function TopNav({ ultimoDato }: { ultimoDato: string }) {
   const actual = usePathname();
   const activa = (href: string) => (href === "/" ? actual === "/" : actual.startsWith(href));
 
+  // Escritorio: links finos arriba a la derecha
   const enlaces = PESTANAS.map((p) => (
     <Link
       key={p.href}
@@ -34,11 +35,12 @@ export function TopNav({ ultimoDato }: { ultimoDato: string }) {
   ));
 
   return (
+    <>
     <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
       <div className="mx-auto flex h-12 max-w-[1400px] items-center justify-between gap-6 px-4 sm:px-8">
         <Link href="/" className="flex items-baseline gap-3">
           <span className="font-serif text-lg font-semibold text-fg">Monitor Vaca Muerta</span>
-          <span className="hidden tabular text-[11px] text-dim sm:inline">
+          <span className="hidden tabular text-[11px] text-dim min-[420px]:inline">
             <span className="text-oil">●</span> datos a {ultimoDato}
           </span>
         </Link>
@@ -49,9 +51,27 @@ export function TopNav({ ultimoDato }: { ultimoDato: string }) {
           <ThemeToggle />
         </div>
       </div>
-      <nav className="flex gap-5 overflow-x-auto px-4 pb-2 md:hidden" aria-label="Secciones">
-        {enlaces}
-      </nav>
     </header>
+      {/* Celular: menú tipo "píldora" flotante. Va FUERA del header: el desenfoque del header
+          (backdrop-blur) haría que "fixed" quede pegado al header y no a la pantalla. */}
+      {/* Celular: menú tipo "píldora" flotante abajo, con botones grandes para el dedo */}
+      <nav
+        className="fixed inset-x-3 bottom-[max(12px,env(safe-area-inset-bottom))] z-30 flex justify-between border border-border bg-bg/95 p-1 backdrop-blur md:hidden"
+        aria-label="Secciones"
+      >
+        {PESTANAS.map((p) => (
+          <Link
+            key={p.href}
+            href={p.href}
+            className={cn(
+              "flex h-11 flex-1 items-center justify-center tabular text-[11px] uppercase tracking-wide",
+              activa(p.href) ? "bg-oil text-bg" : "text-muted active:bg-panel-2",
+            )}
+          >
+            {p.texto === "Predicciones ML" ? "ML" : p.texto}
+          </Link>
+        ))}
+      </nav>
+    </>
   );
 }

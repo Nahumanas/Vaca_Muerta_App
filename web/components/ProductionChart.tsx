@@ -106,7 +106,7 @@ export default function ProductionChart({
           <Segmented opciones={RANGOS} valor={rango} onChange={setRango} etiqueta="Rango de tiempo" />
         </div>
       )}
-      <div style={{ height: alto }}>
+      <div style={{ height: alto }} className="max-sm:h-[260px]!">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={visibles} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
             <defs>

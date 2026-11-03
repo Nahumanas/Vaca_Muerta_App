@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <TopNav ultimoDato={mesTexto(info.ultimo_mes.slice(0, 7))} />
         <main className="mx-auto max-w-[1400px] px-4 sm:px-8">
           {children}
-          <footer className="flex flex-wrap justify-between gap-4 py-8 text-xs text-dim">
+          <footer className="flex flex-wrap justify-between gap-4 pt-8 pb-28 text-xs text-dim md:pb-8">
             <span>
               Fuente: Secretaría de Energía de la Nación, datos abiertos (Capítulo IV y Adjunto IV). Formación Vaca
               Muerta. Proyecto de Nahuel Mansilla.

@@ -2,7 +2,8 @@
 // Todos los números se calculan con los datos reales: cuando llega un mes nuevo, se actualizan solos.
 import Link from "next/link";
 import { DashboardKPIs } from "@/components/DashboardKPIs";
-import MarketShareChart from "@/components/MarketShareChart";
+import MainChart from "@/components/MainChart";
+import MarketShareRanking from "@/components/MarketShareRanking";
 import ProductionChart from "@/components/ProductionChart";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
@@ -10,7 +11,7 @@ import { MOSTRAR_ML } from "@/lib/config";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { cargarDiseno, cargarEmpresas, cargarInfo, cargarResumen } from "@/lib/datos";
 import { anioDe, mesTexto, num, restarMeses } from "@/lib/formato";
-import { calcularKPIs, calcularParticipacion, topConResto } from "@/lib/indicadores";
+import { calcularHitos, calcularKPIs, calcularParticipacion, seriesPorEmpresa, topConResto } from "@/lib/indicadores";
 
 const ANIO_BASE = 2019; // primer año de la Parte 2 del proyecto (Balance Energético)
 const ANIO_INICIO = 2013; // desde acá la producción de Vaca Muerta empieza a ser relevante
@@ -44,11 +45,16 @@ export default function Inicio() {
 
   // Market share de los últimos 12 meses
   const desde = restarMeses(ultimo.fecha, 11);
-  const ult12 = cargarEmpresas().filter((e) => e.fecha >= desde);
+  const empresas = cargarEmpresas();
+  const ult12 = empresas.filter((e) => e.fecha >= desde);
   const participacion = calcularParticipacion(ult12, "pet");
+  const ranking = topConResto(participacion, 8);
+  // Curva de cada empresa del ranking (para cuando se elige una)
+  const porEmpresa = seriesPorEmpresa(empresas, serie.map((s) => s.fecha), ranking.map((r) => r.grupo));
   const [lider, segunda] = participacion;
 
   const diseno = cargarDiseno();
+  const hitos = calcularHitos(diseno);
   const dIni = diseno.find((d) => d.anio_fractura === ANIO_INICIO)!;
   const dFin = diseno.find((d) => d.anio_fractura === anioCerrado)!;
   const cien = (x: number) => Math.round(x / 100) * 100;
@@ -70,35 +76,24 @@ export default function Inicio() {
       <DashboardKPIs kpis={kpis} />
 
       <Fila className="xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader
-            titulo="Evolución del petróleo"
-            descripcion={`Miles de barriles por día. De ${num(base.pet)} mil (promedio ${ANIO_BASE}) a ${num(ultimo.petroleo_kbbl_d)} mil en ${mesTexto(ultimo.fecha)}.`}
+        <Card id="grafico-principal" className="scroll-mt-16 xl:col-span-2">
+          <MainChart
+            total={serie}
+            porEmpresa={porEmpresa}
+            hitos={hitos}
+            promedioBase={{ valor: base.pet, anio: ANIO_BASE }}
             accion={enlace("/evolucion")}
           />
-          <CardBody>
-            <ProductionChart
-              datos={serie}
-              alto={340}
-              serie={{ clave: "petroleo", nombre: "Petróleo", unidad: "mil bbl/d", color: "oil", decimales: 1 }}
-              extras={[
-                { clave: "gas", nombre: "Gas", unidad: "MMm³/d", decimales: 1 },
-                { clave: "pozos", nombre: "Pozos en producción", unidad: "" },
-                { clave: "bblPozo", nombre: "Por pozo", unidad: "bbl/d" },
-              ]}
-              referencia={{ valor: base.pet, etiqueta: `Promedio ${ANIO_BASE}` }}
-            />
-          </CardBody>
         </Card>
 
         <Card>
           <CardHeader
             titulo="Market share"
-            descripcion={`Petróleo, ${mesTexto(desde)} a ${mesTexto(ultimo.fecha)}`}
+            descripcion={`Petróleo, ${mesTexto(desde)} a ${mesTexto(ultimo.fecha)}. Pasá el mouse o tocá una empresa.`}
             accion={enlace("/empresas")}
           />
           <CardBody>
-            <MarketShareChart datos={topConResto(participacion, 8)} destacadas={[lider.grupo]} />
+            <MarketShareRanking datos={ranking} irA="grafico-principal" />
           </CardBody>
         </Card>
       </Fila>

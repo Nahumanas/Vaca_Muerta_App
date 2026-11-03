@@ -10,7 +10,7 @@ export default function Mapa() {
     <>
       <PageHeader
         titulo="Mapa de pozos"
-        bajada="Cada punto es un pozo. El color muestra cuánto petróleo produjo en total desde que empezó. Pasá el mouse por un pozo para ver su detalle."
+        bajada="Cada punto es un pozo. El color muestra cuánto petróleo produjo en total desde que empezó. Pasá el mouse (o tocá) un pozo para ver su detalle."
       />
       <MapaCliente pozos={cargarPozos()} />
     </>

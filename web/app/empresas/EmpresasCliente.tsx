@@ -1,14 +1,14 @@
 "use client";
-// Empresas: market share (barras), métricas y evolución de las 5 principales (áreas apiladas).
+// Empresas: ranking de market share, métricas y las 5 principales en gráficos chicos sincronizados.
 import { useMemo, useState } from "react";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, YAxis, type TooltipContentProps } from "recharts";
 import { KPICard } from "@/components/DashboardKPIs";
-import MarketShareChart from "@/components/MarketShareChart";
+import MarketShareRanking from "@/components/MarketShareRanking";
+import SmallMultiplesSync from "@/components/SmallMultiplesSync";
 import { Card, CardBody, CardHeader, Fila } from "@/components/ui/Card";
 import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
 import type { Empresa } from "@/lib/datos";
-import { anioDe, diasDelMes, mesTexto, num, restarMeses, sumarPor } from "@/lib/formato";
+import { anioDe, mesTexto, num, restarMeses, sumarPor } from "@/lib/formato";
 import { calcularParticipacion, topConResto } from "@/lib/indicadores";
 
 const ULT12 = "Últimos 12 meses";
@@ -21,10 +21,9 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
   const ultimo = filas.reduce((m, f) => (f.fecha > m ? f.fecha : m), filas[0].fecha);
   const periodos = [ULT12, ...Array.from({ length: anioDe(ultimo) - 2017 }, (_, i) => String(anioDe(ultimo) - i))];
   const esPetroleo = producto === "Petróleo";
-  const color = esPetroleo ? "oil" : "gas";
   const unidad = esPetroleo ? "mil bbl/d" : "MMm³/d";
 
-  const { part, textoPeriodo, conProduccion, dias } = useMemo(() => {
+  const { part, textoPeriodo, conProduccion } = useMemo(() => {
     let sel: Empresa[];
     let texto: string;
     if (periodo === ULT12) {
@@ -40,7 +39,6 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
       part,
       textoPeriodo: texto,
       conProduccion: part.filter((p) => p.valor > 0).length,
-      dias: [...new Set(sel.map((f) => f.fecha))].reduce((s, f) => s + diasDelMes(f), 0),
     };
   }, [filas, periodo, esPetroleo, ultimo]);
 
@@ -66,12 +64,6 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
 
   const lider = part[0];
   const top3 = part.slice(0, 3).reduce((s, p) => s + p.pct, 0);
-  // Pasar el total del período a "por día" para el tooltip de las barras
-  const porDia = (valor: number) =>
-    esPetroleo ? (valor * 6.2898) / dias / 1000 : valor / dias / 1000; // m³ -> mil bbl/d · mil m³ -> MMm³/d
-
-  // Todos los gráficos chicos usan la MISMA escala, así se pueden comparar a simple vista
-  const maximo = Math.max(1, ...series.flatMap((f) => nombresSeries.map((g) => Number((f as Record<string, unknown>)[g] ?? 0))));
 
   return (
     <>
@@ -82,13 +74,9 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
 
       <Fila className="xl:grid-cols-3">
         <Card className="xl:col-span-2">
-          <CardHeader titulo={`Market share del ${producto.toLowerCase()}`} descripcion={textoPeriodo} />
+          <CardHeader titulo={`Market share del ${producto.toLowerCase()}`} descripcion={`${textoPeriodo}. Pasá el mouse o tocá una empresa para resaltarla abajo.`} />
           <CardBody>
-            <MarketShareChart
-              datos={topConResto(part, 10)}
-              color={color}
-              valorTooltip={(p) => `${num(porDia(p.valor), 1)} ${unidad} en promedio`}
-            />
+<MarketShareRanking datos={topConResto(part, 10)} seleccionables={nombresSeries} />
           </CardBody>
         </Card>
         <Card className="divide-y divide-border py-0">
@@ -96,7 +84,7 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
             <p className="rotulo">Empresa líder</p>
             <p className="mt-3 font-serif text-4xl font-medium text-fg">{lider.grupo}</p>
             <p className="mt-2 text-xs text-dim">
-              Produce el <span className="tabular text-oil">{num(lider.pct, 1)}%</span> del {producto.toLowerCase()}
+              Produce el <span className="tabular text-fg">{num(lider.pct, 1)}%</span> del {producto.toLowerCase()}
             </p>
           </div>
           <KPICard className="py-7" kpi={{ id: "top3", titulo: "Las 3 primeras juntas", valor: top3, decimales: 1, unidad: "% del total", variaciones: [] }} />
@@ -108,63 +96,13 @@ export default function EmpresasCliente({ filas }: { filas: Empresa[] }) {
         <Card>
           <CardHeader
             titulo={`Las 5 principales en ${producto.toLowerCase()}, desde 2018`}
-            descripcion={`${esPetroleo ? "Miles de barriles por día" : "Millones de m³ por día"}. Todos los gráficos tienen la misma escala.`}
+            descripcion={`${esPetroleo ? "Miles de barriles por día" : "Millones de m³ por día"}. Misma escala en todos. Pasá el mouse por uno: el resto marca la misma fecha.`}
           />
-          <CardBody className="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-            {nombresSeries.map((g, i) => {
-              const ult = Number((series[series.length - 1] as Record<string, unknown>)?.[g] ?? 0);
-              const resaltar = i === 0;
-              return (
-                <div key={g} className="border-t border-border pt-3">
-                  <div className="mb-2 flex items-baseline justify-between gap-2">
-                    <span className="truncate text-sm text-fg">{g}</span>
-                    <span className="tabular text-sm text-fg">
-                      {num(ult, 1)} <span className="text-[11px] text-dim">{unidad}</span>
-                    </span>
-                  </div>
-                  <div style={{ height: 110 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={series} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
-                        <YAxis hide domain={[0, maximo]} />
-                        <Tooltip
-                          content={(p) => <DetalleChico {...(p as TooltipContentProps<number, string>)} unidad={unidad} />}
-                          cursor={{ stroke: "var(--dim)", strokeWidth: 1 }}
-                        />
-                        <Area
-                          type="monotone"
-                          dataKey={g}
-                          stroke={resaltar ? `var(--${color})` : "var(--muted)"}
-                          strokeWidth={1.5}
-                          fill={resaltar ? `var(--${color})` : "var(--muted)"}
-                          fillOpacity={resaltar ? 0.18 : 0.08}
-                          isAnimationActive={false}
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <div className="mt-1 flex justify-between tabular text-[10.5px] text-dim">
-                    <span>{series[0]?.fecha.slice(0, 4)}</span>
-                    <span>{mesTexto(series[series.length - 1]?.fecha ?? ultimo)}</span>
-                  </div>
-                </div>
-              );
-            })}
+          <CardBody>
+            <SmallMultiplesSync datos={series} nombres={nombresSeries} unidad={unidad} />
           </CardBody>
         </Card>
       </Fila>
     </>
-  );
-}
-
-function DetalleChico({ active, payload, label, unidad }: TooltipContentProps<number, string> & { unidad: string }) {
-  if (!active || !payload?.length) return null;
-  const p = payload[0];
-  return (
-    <div className="border border-border bg-bg px-2.5 py-1.5 text-xs">
-      <p className="rotulo">{mesTexto(String((p.payload as { fecha: string }).fecha ?? label))}</p>
-      <p className="tabular text-fg">
-        {num(Number(p.value), 1)} <span className="text-dim">{unidad}</span>
-      </p>
-    </div>
   );
 }

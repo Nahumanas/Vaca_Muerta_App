@@ -6,7 +6,7 @@ import { cn } from "@/lib/cn";
 
 type Props = { opciones: string[]; elegidas: string[]; onChange: (v: string[]) => void; vacio?: string; visibles?: number };
 
-const base = "border px-2 py-0.5 text-xs transition-colors";
+const base = "border px-2.5 py-1.5 text-xs transition-colors sm:px-2 sm:py-0.5";
 const apagado = "border-border text-muted hover:border-dim hover:text-fg";
 const prendido = "border-oil bg-oil text-bg";
 
