@@ -1,7 +1,7 @@
 // Cálculos que usa el panel (se hacen al construir la web, con los datos reales).
 // Si más adelante el backend en Python devuelve estos mismos objetos, las páginas no cambian.
 import type { KPI } from "@/components/DashboardKPIs";
-import type { Empresa, Resumen } from "@/lib/datos";
+import type { Diseno, Empresa, Resumen } from "@/lib/datos";
 import { mesTexto, restarMeses, sumarPor } from "@/lib/formato";
 
 // KPIs del último mes: valor + variación contra el mes anterior y contra un año antes
@@ -36,7 +36,7 @@ export function calcularKPIs(resumen: Resumen[]): KPI[] {
       valor: ultimo.pozos_activos,
       unidad: "pozos",
       color: "neutro",
-      variaciones: vs("pozos_activos", anterior),
+      variaciones: [...vs("pozos_activos", anterior), ...vs("pozos_activos", haceUnAnio)],
     },
   ];
 }
@@ -60,4 +60,37 @@ export function topConResto(part: ParticipacionEmpresa[], n: number): Participac
     ...part.slice(0, n),
     { grupo: "Resto", pct: resto.reduce((s, p) => s + p.pct, 0), valor: resto.reduce((s, p) => s + p.valor, 0) },
   ];
+}
+
+// Hitos tecnológicos para marcar en el gráfico principal: el primer año en que el pozo típico
+// (mediana de los pozos fracturados ese año) superó cada umbral. Si dos caen el mismo año, se juntan.
+export function calcularHitos(diseno: Diseno[]): { fecha: string; etiqueta: string }[] {
+  const ordenado = [...diseno].sort((a, b) => a.anio_fractura - b.anio_fractura);
+  const umbrales = [
+    { etiqueta: "Ramas de 2.000 m", cumple: (d: Diseno) => d.rama_m >= 2000 },
+    { etiqueta: "Ramas de 3.000 m", cumple: (d: Diseno) => d.rama_m >= 3000 },
+    { etiqueta: "50 etapas de fractura", cumple: (d: Diseno) => d.etapas >= 50 },
+  ];
+  const porAnio = new Map<number, string[]>();
+  for (const u of umbrales) {
+    const d = ordenado.find(u.cumple);
+    if (d) porAnio.set(d.anio_fractura, [...(porAnio.get(d.anio_fractura) ?? []), u.etiqueta]);
+  }
+  return [...porAnio].map(([anio, etiquetas]) => ({ fecha: `${anio}-01`, etiqueta: etiquetas.join(" · ") }));
+}
+
+// Petróleo (mil bbl/d) de cada empresa, mes a mes, alineado con la lista de fechas.
+// Las empresas que no están en "nombres" se suman en "Resto".
+export function seriesPorEmpresa(filas: Empresa[], fechas: string[], nombres: string[]): Record<string, number[]> {
+  const indice = new Map(fechas.map((f, i) => [f, i]));
+  const salida: Record<string, number[]> = Object.fromEntries(nombres.map((n) => [n, fechas.map(() => 0)]));
+  if (!salida.Resto) salida.Resto = fechas.map(() => 0);
+  for (const f of filas) {
+    const i = indice.get(f.fecha);
+    if (i === undefined) continue;
+    const g = salida[f.grupo] && f.grupo !== "Resto" ? f.grupo : "Resto";
+    salida[g][i] += f.petroleo_kbbl_d;
+  }
+  for (const k of Object.keys(salida)) salida[k] = salida[k].map((v) => Math.round(v * 100) / 100);
+  return salida;
 }

@@ -37,6 +37,7 @@
   --up: #3ecf8e;
   --down: #ff4d4d;
   --accent: #ff5c00;
+  --empresa: #22d3ee;     /* acento de la empresa elegida (el naranja es solo para el total) */
 }
 
 [data-theme="light"] {
@@ -57,6 +58,7 @@
   --up: #12805c;
   --down: #c53030;
   --accent: #0f5e73;
+  --empresa: #c2410c;
 }
 
 /* Le decimos a Tailwind que use esas variables: así existen bg-panel, text-muted, text-oil, etc. */
@@ -76,6 +78,7 @@
   --color-up: var(--up);
   --color-down: var(--down);
   --color-accent: var(--accent);
+  --color-empresa: var(--empresa);
   --font-sans: "DM Sans Variable", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", Georgia, serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
